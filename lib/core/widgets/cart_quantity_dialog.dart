@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio_complete/data/models/product_model.dart';
+import 'package:dio_complete/core/widgets/app_formatter.dart';
+import 'package:dio_complete/features/product/data/models/product_model.dart';
 
 Future<int?> showCartQuantityDialog({
   required BuildContext context,
@@ -48,7 +49,7 @@ Future<int?> showCartQuantityDialog({
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${product.price.toStringAsFixed(0)}đ',
+                            AppFormatter.currency(product.price),
                             style: const TextStyle(
                               color: Colors.blue,
                               fontWeight: FontWeight.w600,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio_complete/core/di/app_binding.dart';
+import 'package:dio_complete/core/bindings/app_binding.dart';
 import 'package:dio_complete/routes/app_pages.dart';
 import 'package:dio_complete/routes/app_routes.dart';
 
