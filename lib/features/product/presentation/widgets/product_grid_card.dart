@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/core/widgets/app_formatter.dart';
 import 'package:dio_complete/core/widgets/app_image_placeholder.dart';
-import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 
 /// 1 thẻ sản phẩm trong lưới 2 cột ở màn Home.
 ///

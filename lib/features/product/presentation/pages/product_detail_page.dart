@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/core/widgets/app_formatter.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 import 'package:dio_complete/features/product/presentation/controllers/product_detail_controller.dart';
 
 class ProductDetailPage extends GetView<ProductDetailController> {
@@ -10,233 +11,314 @@ class ProductDetailPage extends GetView<ProductDetailController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chi tiết sản phẩm'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Sửa sản phẩm',
-            onPressed: controller.goToEdit,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            tooltip: 'Xóa sản phẩm',
-            onPressed: controller.deleteProduct,
-          ),
-        ],
-      ),
-      body: Obx(() {
-        // Đang tải lần đầu
-        if (controller.isLoading.value && controller.product.value == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final p = controller.product.value;
-        if (p == null) {
-          return const Center(child: Text('Không tìm thấy sản phẩm'));
-        }
-
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Ảnh sản phẩm ──────────────────────────────────
-              if (p.image.isNotEmpty)
-                SizedBox(
-                  width: double.infinity,
-                  height: 240,
-                  child: Image.network(
-                    p.image,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.broken_image,
-                          size: 60, color: Colors.grey),
-                    ),
-                  ),
-                )
-              else
-                Container(
-                  width: double.infinity,
-                  height: 180,
-                  color: Colors.grey.shade200,
-                  child: const Icon(Icons.image, size: 60, color: Colors.grey),
-                ),
-
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Tên & trạng thái ─────────────────────────
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            p.name,
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: p.status == 1
-                                ? Colors.green.shade100
-                                : Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            p.status == 1 ? 'Còn bán' : 'Ngừng bán',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: p.status == 1
-                                  ? Colors.green.shade700
-                                  : Colors.grey.shade600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    // ── Mã sản phẩm ───────────────────────────────
-                    Text('Mã SP: ${p.code}',
-                        style: const TextStyle(color: Colors.grey)),
-                    const SizedBox(height: 4),
-
-                    // ── Danh mục ──────────────────────────────────
-                    Row(
-                      children: [
-                        Icon(Icons.category_outlined,
-                            size: 14, color: Colors.grey.shade600),
-                        const SizedBox(width: 4),
-                        Text(
-                          p.category?.name ?? 'Chưa phân loại',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    Obx(() => Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            controller.cartQuantity.value > 0
-                                ? 'Đã thêm vào giỏ: ${controller.cartQuantity.value}'
-                                : 'Chưa có trong giỏ hàng',
-                            style: TextStyle(
-                              color: Colors.blue.shade700,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        )),
-                    const SizedBox(height: 16),
-
-                    // ── Giá & Tồn kho ─────────────────────────────
-                    Row(
-                      children: [
-                        _infoBox(
-                          label: 'Giá bán',
-                          value: AppFormatter.currency(p.price),
-                          color: Colors.blue.shade50,
-                          textColor: Colors.blue,
-                        ),
-                        const SizedBox(width: 12),
-                        _infoBox(
-                          label: 'Tồn kho',
-                          value: '${p.stock} cái',
-                          color: Colors.orange.shade50,
-                          textColor: Colors.orange.shade700,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // ── Mô tả ─────────────────────────────────────
-                    if (p.description.isNotEmpty) ...[
-                      const Text('Mô tả',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
-                      const SizedBox(height: 6),
-                      Text(p.description,
-                          style: const TextStyle(
-                              height: 1.5, color: Colors.black87)),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // ── Ngày tạo / cập nhật ───────────────────────
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    _metaRow('Ngày tạo', _formatDate(p.createdAt)),
-                    const SizedBox(height: 4),
-                    _metaRow('Cập nhật', _formatDate(p.updatedAt)),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
+      appBar: const _ProductDetailAppBar(),
+      body: const _ProductDetailBody(),
     );
   }
+}
 
-  // ── Widget ô thông tin ────────────────────────────────────────
-  Widget _infoBox({
-    required String label,
-    required String value,
-    required Color color,
-    required Color textColor,
-  }) {
+class _ProductDetailAppBar extends GetView<ProductDetailController>
+    implements PreferredSizeWidget {
+  const _ProductDetailAppBar();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: const Text('Chi tiết sản phẩm'),
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.edit_outlined),
+          tooltip: 'Sửa sản phẩm',
+          onPressed: controller.goToEdit,
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete_outline),
+          tooltip: 'Xóa sản phẩm',
+          onPressed: controller.deleteProduct,
+        ),
+      ],
+    );
+  }
+}
+
+/// Toàn bộ nội dung phụ thuộc product.value (đổi sản phẩm là đổi gần như mọi
+/// thứ hiển thị) nên bọc 1 Obx rộng ở đây là hợp lý - không phải trường hợp
+/// "bọc thừa" (khác với product_form_page.dart cũ, nơi Obx bọc cả cây chỉ vì
+/// 1 cờ bool không liên quan tới phần lớn nội dung).
+class _ProductDetailBody extends GetView<ProductDetailController> {
+  const _ProductDetailBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      if (controller.isLoading.value && controller.product.value == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final p = controller.product.value;
+      if (p == null) {
+        return const Center(child: Text('Không tìm thấy sản phẩm'));
+      }
+
+      return SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ProductBanner(product: p),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ProductTitleRow(product: p),
+                  const SizedBox(height: 8),
+                  Text('Mã SP: ${p.code}', style: const TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 4),
+                  _CategoryRow(product: p),
+                  const SizedBox(height: 16),
+                  const _CartStatusBanner(),
+                  const SizedBox(height: 16),
+                  _PriceAndStockRow(product: p),
+                  const SizedBox(height: 16),
+                  _ProductDescription(product: p),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  _MetaRow(label: 'Ngày tạo', value: _formatDate(p.createdAt)),
+                  const SizedBox(height: 4),
+                  _MetaRow(label: 'Cập nhật', value: _formatDate(p.updatedAt)),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+String _formatDate(String raw) {
+  final parsed = DateTime.tryParse(raw);
+  if (parsed == null) return raw;
+  final day = parsed.day.toString().padLeft(2, '0');
+  final month = parsed.month.toString().padLeft(2, '0');
+  return '$day/$month/${parsed.year}';
+}
+
+class _ProductBanner extends StatelessWidget {
+  final Product product;
+
+  const _ProductBanner({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    if (product.image.isNotEmpty) {
+      return SizedBox(
+        width: double.infinity,
+        height: 240,
+        child: Image.network(
+          product.image,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: Colors.grey.shade200,
+            child: const Icon(Icons.broken_image, size: 60, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+    return Container(
+      width: double.infinity,
+      height: 180,
+      color: Colors.grey.shade200,
+      child: const Icon(Icons.image, size: 60, color: Colors.grey),
+    );
+  }
+}
+
+class _ProductTitleRow extends StatelessWidget {
+  final Product product;
+
+  const _ProductTitleRow({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = product.status == 1;
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            product.name,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: isActive ? Colors.green.shade100 : Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            isActive ? 'Còn bán' : 'Ngừng bán',
+            style: TextStyle(
+              fontSize: 12,
+              color: isActive ? Colors.green.shade700 : Colors.grey.shade600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CategoryRow extends StatelessWidget {
+  final Product product;
+
+  const _CategoryRow({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.category_outlined, size: 14, color: Colors.grey.shade600),
+        const SizedBox(width: 4),
+        Text(
+          product.category?.name ?? 'Chưa phân loại',
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
+      ],
+    );
+  }
+}
+
+/// Đã có Obx riêng sẵn - chỉ phụ thuộc cartQuantity (không phụ thuộc
+/// product.value) nên tách khỏi Obx to bên ngoài, giữ đúng nguyên thiết kế
+/// gốc (đây vốn là 1 ví dụ ĐÚNG cho việc scope Obx hẹp).
+class _CartStatusBanner extends GetView<ProductDetailController> {
+  const _CartStatusBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          controller.cartQuantity.value > 0
+              ? 'Đã thêm vào giỏ: ${controller.cartQuantity.value}'
+              : 'Chưa có trong giỏ hàng',
+          style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+}
+
+class _PriceAndStockRow extends StatelessWidget {
+  final Product product;
+
+  const _PriceAndStockRow({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _InfoBox(
+          label: 'Giá bán',
+          value: AppFormatter.currency(product.price),
+          color: Colors.blue.shade50,
+          textColor: Colors.blue,
+        ),
+        const SizedBox(width: 12),
+        _InfoBox(
+          label: 'Tồn kho',
+          value: '${product.stock} cái',
+          color: Colors.orange.shade50,
+          textColor: Colors.orange.shade700,
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoBox extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final Color textColor;
+
+  const _InfoBox({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, style: TextStyle(fontSize: 12, color: textColor)),
             const SizedBox(height: 4),
-            Text(value,
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: textColor)),
+            Text(
+              value,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _metaRow(String label, String value) => Row(
-        children: [
-          Text('$label: ',
-              style: const TextStyle(color: Colors.grey, fontSize: 12)),
-          Expanded(
-            child: Text(value,
-                style: const TextStyle(fontSize: 12),
-                overflow: TextOverflow.ellipsis),
-          ),
-        ],
-      );
+class _ProductDescription extends StatelessWidget {
+  final Product product;
 
-  String _formatDate(String raw) {
-    final parsed = DateTime.tryParse(raw);
-    if (parsed == null) return raw;
-    final day = parsed.day.toString().padLeft(2, '0');
-    final month = parsed.month.toString().padLeft(2, '0');
-    return '$day/$month/${parsed.year}';
+  const _ProductDescription({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    if (product.description.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Mô tả', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const SizedBox(height: 6),
+        Text(product.description, style: const TextStyle(height: 1.5, color: Colors.black87)),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _MetaRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _MetaRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text('$label: ', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Expanded(
+          child: Text(value, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis),
+        ),
+      ],
+    );
   }
 }

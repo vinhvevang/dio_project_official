@@ -3,8 +3,9 @@ import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/core/widgets/app_field_label.dart';
 import 'package:dio_complete/core/widgets/app_text_field.dart';
-import 'package:dio_complete/features/category/data/models/category_model.dart';
+import 'package:dio_complete/features/category/domain/entities/category.dart';
 import 'package:dio_complete/features/product/presentation/controllers/product_form_controller.dart';
+import 'package:dio_complete/features/product/presentation/validators/product_validators.dart';
 
 class ProductFormPage extends GetView<ProductFormController> {
   const ProductFormPage({super.key});
@@ -12,15 +13,28 @@ class ProductFormPage extends GetView<ProductFormController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(controller.isEditMode ? 'Sửa sản phẩm' : 'Thêm sản phẩm'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
+      appBar: const _ProductFormAppBar(),
       body: const SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: _ProductFormBody(),
       ),
+    );
+  }
+}
+
+class _ProductFormAppBar extends GetView<ProductFormController>
+    implements PreferredSizeWidget {
+  const _ProductFormAppBar();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text(controller.isEditMode ? 'Sửa sản phẩm' : 'Thêm sản phẩm'),
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
     );
   }
 }
@@ -69,9 +83,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
           required: true,
           hintText: 'Nhập tên sản phẩm',
           onChanged: (_) => controller.clearFieldError(),
-          validator: (v) => (v == null || v.trim().isEmpty)
-              ? 'Tên không được để trống'
-              : null,
+          validator: ProductValidators.name,
         ),
         const SizedBox(height: 12),
 
@@ -84,9 +96,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
           required: true,
           hintText: 'VD: DHN-001',
           onChanged: (_) => controller.clearFieldError(),
-          validator: (v) => (v == null || v.trim().isEmpty)
-              ? 'Mã không được để trống'
-              : null,
+          validator: ProductValidators.code,
         ),
         const SizedBox(height: 12),
 
@@ -100,15 +110,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
           hintText: 'VD: 120000',
           keyboardType: TextInputType.number,
           onChanged: (_) => controller.clearFieldError(),
-          validator: (v) {
-            if (v == null || v.trim().isEmpty) {
-              return 'Giá không được để trống';
-            }
-            final val = int.tryParse(v.trim());
-            if (val == null) return 'Giá phải là số nguyên';
-            if (val < 0) return 'Giá không được âm';
-            return null;
-          },
+          validator: ProductValidators.price,
         ),
         const SizedBox(height: 12),
 
@@ -125,15 +127,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
           hintText: 'VD: 10',
           keyboardType: TextInputType.number,
           onChanged: (_) => controller.clearFieldError(),
-          validator: (v) {
-            if (v == null || v.trim().isEmpty) {
-              return 'Số lượng không được để trống';
-            }
-            final val = int.tryParse(v.trim());
-            if (val == null) return 'Số lượng phải là số nguyên';
-            if (val < 0) return 'Số lượng không được âm';
-            return null;
-          },
+          validator: ProductValidators.stock,
         ),
         const SizedBox(height: 12),
 
@@ -150,13 +144,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
           hintText: 'https://... (có thể để trống)',
           prefixIcon: const Icon(Icons.image_outlined),
           onChanged: (_) => controller.clearFieldError(),
-          validator: (v) {
-            final trimmed = v?.trim() ?? '';
-            if (trimmed.isEmpty) return null; // được phép để trống
-            final uri = Uri.tryParse(trimmed);
-            if (uri == null || !uri.hasScheme) return 'URL không hợp lệ';
-            return null;
-          },
+          validator: ProductValidators.image,
         ),
         const SizedBox(height: 12),
 
@@ -273,7 +261,7 @@ class _CategoryDropdown extends GetView<ProductFormController> {
               controller.selectCategory(value);
               controller.clearFieldError();
             },
-            validator: controller.validateCategory,
+            validator: ProductValidators.category,
           ),
         ],
       );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_colors.dart';
-import 'package:dio_complete/features/category/data/models/category_model.dart';
+import 'package:dio_complete/features/category/domain/entities/category.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_controller.dart';
 import 'package:dio_complete/features/product/presentation/controllers/home_controller.dart';
 

@@ -1,16 +1,26 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+/// Hiệu ứng "bay vào giỏ hàng" - hiện 1 bản sao ảnh sản phẩm bay từ vị trí
+/// [from] tới [to] rồi biến mất.
+///
+/// Dùng Get.overlayContext (context của overlay gốc do GetMaterialApp quản
+/// lý) thay vì nhận BuildContext từ nơi gọi - nơi gọi (HomeController) là 1
+/// GetxController, không nên phải cầm theo BuildContext của UI chỉ để chuyển
+/// tiếp xuống đây (phá vỡ tách biệt controller/view mà GetX hướng tới).
 class FlyingCartOverlay {
   static Future<void> animate({
-    required BuildContext context,
     required Rect from,
     required Rect to,
     required Widget child,
     Duration duration = const Duration(milliseconds: 650),
   }) async {
-    final overlay = Overlay.of(context);
+    final overlayContext = Get.overlayContext;
+    if (overlayContext == null) return;
+
+    final overlay = Overlay.of(overlayContext);
     if (overlay == null) return;
 
     final completer = Completer<void>();

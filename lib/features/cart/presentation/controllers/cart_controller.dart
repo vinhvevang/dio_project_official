@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/confirm_dialog.dart';
 import 'package:dio_complete/features/cart/domain/entities/cart_item.dart';
 import 'package:dio_complete/features/cart/domain/usecases/cart_usecase.dart';
-import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 import 'package:dio_complete/features/product/presentation/controllers/product_detail_args.dart';
 import 'package:dio_complete/routes/app_routes.dart';
 
@@ -21,11 +21,25 @@ class CartController extends GetxController {
     items.assignAll(_cartUseCase.loadItems());
   }
 
+  /// Thêm sản phẩm vào giỏ - gọi từ HomeController khi người dùng bấm "thêm
+  /// vào giỏ" ở màn danh sách. Trước đây Home ghi thẳng qua CartUseCase,
+  /// không đụng gì tới `items` ở đây cả - nếu CartController đã từng được
+  /// tạo trong phiên này (người dùng đã mở giỏ hàng ít nhất 1 lần), `items`
+  /// sẽ bị LỆCH với dữ liệu thật cho tới lần load lại tiếp theo. Giờ luôn đi
+  /// qua đây để `items` (nguồn duy nhất cho badge số lượng giỏ hàng ở Home)
+  /// luôn đúng ngay lập tức.
+  Future<void> addProduct(Product product, {int quantity = 1}) async {
+    await _cartUseCase.addItem(product, quantity: quantity);
+    _loadCart();
+  }
+
   // Tổng tiền giỏ hàng
   double get totalPrice => items.fold(0, (sum, item) => sum + item.product.price * item.quantity);
 
-  // Số loại sản phẩm
-  int get itemCount => items.length;
+  // Số loại sản phẩm (số dòng trong giỏ, không phải tổng số lượng cộng dồn) -
+  // đặt tên khớp với CartRepositoryImpl.count cho nhất quán giữa các layer.
+  // (itemCount cũ bị xóa vì là 1 getter y hệt, không nơi nào gọi tới.)
+  int get count => items.length;
   int get totalQuantity => items.fold(0, (sum, item) => sum + item.quantity);
 
   int _quantityFor(int productId) {

@@ -1,5 +1,5 @@
-import 'package:dio_complete/features/category/data/models/category_model.dart';
-import 'package:dio_complete/features/category/data/models/category_payload.dart';
+import 'package:dio_complete/features/category/domain/entities/category.dart';
+import 'package:dio_complete/features/category/domain/entities/category_payload.dart';
 
 abstract class CategoryRepository {
   Future<List<Category>> getCategories();

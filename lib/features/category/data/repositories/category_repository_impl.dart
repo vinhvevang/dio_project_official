@@ -1,6 +1,8 @@
 import 'package:dio_complete/core/network/base_dio_repository.dart';
+import 'package:dio_complete/features/category/data/mappers/category_payload_mapper.dart';
 import 'package:dio_complete/features/category/data/models/category_model.dart';
-import 'package:dio_complete/features/category/data/models/category_payload.dart';
+import 'package:dio_complete/features/category/domain/entities/category.dart';
+import 'package:dio_complete/features/category/domain/entities/category_payload.dart';
 import 'package:dio_complete/features/category/domain/repositories/category_repository.dart';
 
 class CategoryRepositoryImpl extends BaseDioRepository
@@ -9,7 +11,7 @@ class CategoryRepositoryImpl extends BaseDioRepository
   Future<List<Category>> getCategories() {
     return run(() async {
       final response = await dio.get('/categories');
-      return asMapList(unwrapData(response.data)).map(Category.fromJson).toList();
+      return asMapList(unwrapData(response.data)).map(CategoryModel.fromJson).toList();
     }, fallbackMessage: 'Tải danh mục thất bại');
   }
 

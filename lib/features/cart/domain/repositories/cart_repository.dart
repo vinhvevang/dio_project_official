@@ -1,4 +1,4 @@
-import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 import 'package:dio_complete/features/cart/domain/entities/cart_item.dart';
 
 abstract class CartRepository {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_text_field.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_form_controller.dart';
+import 'package:dio_complete/features/category/presentation/validators/category_validators.dart';
 
 /// Dialog Thêm/Sửa danh mục dùng chung. Nhận [controller] qua constructor
 /// (không qua Get.find) để không lệ thuộc GetX DI cho object tạm thời này.
@@ -31,12 +32,7 @@ class CategoryFormDialog extends StatelessWidget {
           label: 'Tên danh mục',
           required: true,
           hintText: 'VD: Đồ uống',
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Tên danh mục không được để trống';
-            }
-            return null;
-          },
+          validator: CategoryValidators.name,
           textInputAction: TextInputAction.done,
           onSubmit: _handleSubmit,
         ),

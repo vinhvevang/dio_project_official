@@ -4,6 +4,7 @@ import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/core/widgets/app_formatter.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_controller.dart';
 import 'package:dio_complete/features/category/presentation/widgets/category_drawer.dart';
+import 'package:dio_complete/features/cart/presentation/controllers/cart_controller.dart';
 import 'package:dio_complete/features/product/presentation/controllers/home_controller.dart';
 import 'package:dio_complete/features/product/presentation/widgets/product_filter_sheet.dart';
 import 'package:dio_complete/features/product/presentation/widgets/product_grid_card.dart';
@@ -16,13 +17,7 @@ class HomePage extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: const CategoryDrawer(),
-      appBar: AppBar(
-        title: const Text('Sản phẩm'),
-        centerTitle: true,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: const [_CartAction(), _LogoutAction()],
-      ),
+      appBar: const _HomeAppBar(),
       body: const Column(
         children: [
           _SearchAndFilterRow(),
@@ -31,21 +26,56 @@ class HomePage extends GetView<HomeController> {
           Expanded(child: _ProductGridView()),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: controller.goToAddProduct,
-        icon: const Icon(Icons.add),
-        label: const Text('Thêm SP'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
+      floatingActionButton: const _AddProductFab(),
+    );
+  }
+}
+
+/// AppBar tách riêng khỏi HomePage.build() - action (giỏ hàng, đăng xuất)
+/// nằm gọn trong đúng 1 widget thay vì khai báo thẳng trong Scaffold.
+class _HomeAppBar extends GetView<HomeController> implements PreferredSizeWidget {
+  const _HomeAppBar();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: const Text('Sản phẩm'),
+      centerTitle: true,
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      actions: const [_CartAction(), _LogoutAction()],
+    );
+  }
+}
+
+class _AddProductFab extends GetView<HomeController> {
+  const _AddProductFab();
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: controller.goToAddProduct,
+      icon: const Icon(Icons.add),
+      label: const Text('Thêm SP'),
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
     );
   }
 }
 
 /// Icon giỏ hàng ở AppBar kèm badge số lượng. Chỉ phần BADGE (số lượng) mới
-/// cần bọc Obx - bản thân IconButton không đổi theo cartCount nên để ngoài,
+/// cần bọc Obx - bản thân IconButton không đổi theo số lượng nên để ngoài,
 /// tránh bọc Obx quanh cả Stack khi chỉ 1 phần nhỏ bên trong thực sự cần
 /// rebuild.
+///
+/// Đọc trực tiếp CartController.items.length (nguồn dữ liệu THẬT của giỏ
+/// hàng) thay vì 1 "cartCount" riêng ở HomeController như trước - trước đây
+/// xóa/tăng/giảm số lượng NGAY TRÊN trang giỏ hàng chỉ cập nhật đúng danh
+/// sách của CartController, không hề báo lại cho HomeController biết, khiến
+/// badge hiện sai số cho tới khi có 1 hành động khác tình cờ đồng bộ lại.
 class _CartAction extends GetView<HomeController> {
   const _CartAction();
 
@@ -60,11 +90,12 @@ class _CartAction extends GetView<HomeController> {
           tooltip: 'Giỏ hàng',
         ),
         Obx(() {
-          if (controller.cartCount.value <= 0) return const SizedBox.shrink();
+          final count = Get.find<CartController>().count;
+          if (count <= 0) return const SizedBox.shrink();
           return Positioned(
             right: 6,
             top: 6,
-            child: _CountBadge(count: controller.cartCount.value),
+            child: _CountBadge(count: count),
           );
         }),
       ],
@@ -264,6 +295,13 @@ class _ProductGridView extends GetView<HomeController> {
       }
 
       if (controller.shownProducts.isEmpty) {
+        // Có thể đang tự tải thêm trang để tìm sản phẩm khớp bộ lọc/từ khóa
+        // hiện tại (xem HomeController._applyFilter) - hiện spinner thay vì
+        // báo "không tìm thấy" ngay, tránh gây hiểu lầm là đã tìm xong trong
+        // khi vẫn đang âm thầm tải thêm ở nền.
+        if (controller.isLoadingMore.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
         return _EmptyProductList(onRefresh: controller.refresh);
       }
 
@@ -274,7 +312,17 @@ class _ProductGridView extends GetView<HomeController> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.all(10),
+              // Khi KHÔNG có spinner load-thêm bên dưới, sliver lưới này là
+              // sliver CUỐI CÙNG nên tự gánh luôn khoảng chừa cho FAB (90 =
+              // 10 mặc định + 80 chừa cho FAB) vào padding bottom của chính
+              // nó - không cần thêm 1 SliverToBoxAdapter(SizedBox(...)) chỉ
+              // để tạo khoảng trống tĩnh như trước.
+              padding: EdgeInsets.fromLTRB(
+                10,
+                10,
+                10,
+                controller.isLoadingMore.value ? 10 : 90,
+              ),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -291,11 +339,8 @@ class _ProductGridView extends GetView<HomeController> {
                       product: product,
                       addButtonKey: addButtonKey,
                       onTap: () => controller.goToDetail(product),
-                      onAddToCart: () => controller.promptAddToCart(
-                        context,
-                        product,
-                        addButtonKey,
-                      ),
+                      onAddToCart: () =>
+                          controller.promptAddToCart(product, addButtonKey),
                     );
                   },
                   childCount: controller.shownProducts.length,
@@ -306,16 +351,15 @@ class _ProductGridView extends GetView<HomeController> {
             // "+1" vào itemCount của lưới thì spinner bị kẹt gọn trong đúng 1
             // ô lưới (nửa trái/phải), không phải giữa màn hình. Tách sliver
             // thế này thì Center bên trong mới thật sự căn giữa theo chiều
-            // ngang toàn màn hình, và luôn nằm ngay dưới hàng sản phẩm cuối.
+            // ngang toàn màn hình. Sliver này giờ là sliver CUỐI nên tự chừa
+            // luôn khoảng cho FAB ở padding bottom của chính nó.
             if (controller.isLoadingMore.value)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
+              const SliverPadding(
+                padding: EdgeInsets.fromLTRB(0, 16, 0, 90),
+                sliver: SliverToBoxAdapter(
                   child: Center(child: CircularProgressIndicator()),
                 ),
               ),
-            // Chừa khoảng trống cuối cùng để FAB không đè lên sản phẩm.
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
       );

@@ -1,15 +1,17 @@
 import 'package:dio/dio.dart';
 import 'package:dio_complete/core/network/base_dio_repository.dart';
 import 'package:dio_complete/core/network/dio_error_mapper.dart';
+import 'package:dio_complete/features/product/data/mappers/product_payload_mapper.dart';
 import 'package:dio_complete/features/product/data/models/product_model.dart';
-import 'package:dio_complete/features/product/data/models/product_payload.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
+import 'package:dio_complete/features/product/domain/entities/product_payload.dart';
 import 'package:dio_complete/features/product/domain/entities/product_result.dart';
 import 'package:dio_complete/features/product/domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl extends BaseDioRepository
     implements ProductRepository {
   List<Product> _extractProducts(dynamic raw) =>
-      asMapList(unwrapData(raw)).map(Product.fromJson).toList();
+      asMapList(unwrapData(raw)).map(ProductModel.fromJson).toList();
 
   Map<String, dynamic> _extractSingleProductMap(dynamic raw) {
     final node = unwrapData(raw);
@@ -58,7 +60,7 @@ class ProductRepositoryImpl extends BaseDioRepository
   Future<Product> getProductDetail(int id) async {
     try {
       final response = await dio.get('/products/$id');
-      return Product.fromJson(_extractSingleProductMap(response.data));
+      return ProductModel.fromJson(_extractSingleProductMap(response.data));
     } on DioException catch (e) {
       // 404 hoặc lỗi khác: BE này đôi khi không cho GET chi tiết trực tiếp dù
       // sản phẩm có tồn tại - dự phòng bằng cách tìm trong danh sách đầy đủ
@@ -78,7 +80,7 @@ class ProductRepositoryImpl extends BaseDioRepository
 
       // Trường hợp thường gặp: backend trả về nguyên object sản phẩm vừa tạo.
       if (node is Map || node is List) {
-        return Product.fromJson(
+        return ProductModel.fromJson(
           _extractSingleProductMap(node),
         ).copyWith(category: payload.category);
       }
@@ -104,7 +106,7 @@ class ProductRepositoryImpl extends BaseDioRepository
       final node = unwrapData(response.data);
 
       if (node is Map || node is List) {
-        return Product.fromJson(
+        return ProductModel.fromJson(
           _extractSingleProductMap(node),
         ).copyWith(category: payload.category);
       }

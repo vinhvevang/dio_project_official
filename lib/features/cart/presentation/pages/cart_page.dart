@@ -11,13 +11,25 @@ class CartPage extends GetView<CartController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Giỏ hàng'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: const [_ClearCartAction()],
-      ),
+      appBar: const _CartAppBar(),
       body: const _CartBody(),
+    );
+  }
+}
+
+class _CartAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _CartAppBar();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: const Text('Giỏ hàng'),
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      actions: const [_ClearCartAction()],
     );
   }
 }

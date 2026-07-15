@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dio_complete/features/category/data/models/category_model.dart';
+import 'package:dio_complete/features/category/domain/entities/category.dart';
 
 /// Điều khiển form Thêm/Sửa danh mục. Là object Dart thường (không qua
 /// Get.put/Get.find, không tự dispose FocusNode/TextEditingController) -

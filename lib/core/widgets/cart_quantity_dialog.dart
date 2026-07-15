@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/core/widgets/app_formatter.dart';
 import 'package:dio_complete/core/widgets/app_image_placeholder.dart';
-import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 
+/// Hiện dialog chọn số lượng trước khi thêm vào giỏ. Dùng Get.dialog() (của
+/// GetX) nên KHÔNG cần nhận BuildContext từ nơi gọi - trước đây có tham số
+/// context nhưng không hề được dùng ở đâu trong thân hàm (dead parameter).
 Future<int?> showCartQuantityDialog({
-  required BuildContext context,
   required Product product,
   int initialQuantity = 1,
 }) async {

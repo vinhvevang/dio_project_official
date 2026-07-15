@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_message_dialog.dart';
-import 'package:dio_complete/features/category/data/models/category_model.dart' ;
-import 'package:dio_complete/features/product/data/models/product_model.dart';
-import 'package:dio_complete/features/product/data/models/product_payload.dart';
+import 'package:dio_complete/features/category/domain/entities/category.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
+import 'package:dio_complete/features/product/domain/entities/product_payload.dart';
 import 'package:dio_complete/features/product/domain/usecases/product_usecase.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_controller.dart';
 
@@ -108,10 +108,6 @@ class ProductFormController extends GetxController {
     if (fieldError.value.isNotEmpty) {
       fieldError.value = '';
     }
-  }
-
-  String? validateCategory(Category? value) {
-    return value == null ? 'Vui lòng chọn danh mục' : null;
   }
 
   Future<void> submit() async {

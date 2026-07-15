@@ -7,8 +7,9 @@ import 'package:dio_complete/core/widgets/confirm_dialog.dart';
 import 'package:dio_complete/core/widgets/app_message_dialog.dart';
 import 'package:dio_complete/core/widgets/cart_quantity_dialog.dart';
 import 'package:dio_complete/core/widgets/flying_cart_overlay.dart';
-import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 import 'package:dio_complete/features/cart/domain/usecases/cart_usecase.dart';
+import 'package:dio_complete/features/cart/presentation/controllers/cart_controller.dart';
 import 'package:dio_complete/features/product/domain/usecases/product_usecase.dart';
 import 'package:dio_complete/features/product/presentation/controllers/product_detail_args.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_controller.dart';
@@ -29,7 +30,14 @@ class HomeController extends GetxController {
   final hasMore = true.obs;
 
   // ─── Giỏ hàng ─────────────────────────────────────────────────
-  final cartCount = 0.obs;
+  // Không còn giữ 1 "cartCount" riêng ở đây nữa - trước đây nó là 1 con số
+  // chỉ được cập nhật thủ công ở vài chỗ (mở app, thêm hàng, lúc QUAY LẠI từ
+  // trang giỏ hàng), trong khi CartController lại có danh sách `items` của
+  // riêng nó và tự cập nhật mỗi khi xóa/tăng/giảm số lượng NGAY TRÊN trang
+  // giỏ hàng mà không hề báo lại cho HomeController - dẫn tới badge hiện sai
+  // số sau khi xóa/sửa giỏ hàng. Giờ badge (ở home_page.dart) đọc trực tiếp
+  // từ CartController.items - CHỈ 1 nguồn dữ liệu duy nhất, không thể lệch
+  // nhau được nữa dù sửa giỏ hàng ở bất kỳ luồng nào.
   final cartIconKey = GlobalKey();
 
   /// Cache GlobalKey của nút "thêm vào giỏ" theo id sản phẩm - PHẢI tái dùng
@@ -68,6 +76,11 @@ class HomeController extends GetxController {
   // ─── Scroll ───────────────────────────────────────────────────
   final scrollController = ScrollController();
 
+  // Subscription của 2 listener bên dưới - PHẢI cancel ở onClose(), xem lý do
+  // ở onClose().
+  StreamSubscription? _targetPriceSubscription;
+  StreamSubscription? _categorySubscription;
+
   int _page = 1;
   static const _limit = 10;
 
@@ -75,7 +88,6 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     _loadProducts(reset: true);
-    _updateCartCount();
 
     // Khi cuộn gần cuối → load thêm
     scrollController.addListener(() {
@@ -89,13 +101,25 @@ class HomeController extends GetxController {
 
     // Reactive: đổi targetPrice → cập nhật list ngay (tìm kiếm gọi
     // _applyFilter() trực tiếp qua onSearchChanged, xem bên dưới)
-    targetPrice.listen((_) => _applyFilter());
+    _targetPriceSubscription = targetPrice.listen((_) => _applyFilter());
     // Chọn danh mục ở Drawer -> lọc lại danh sách ngay
-    _categoryController.selectedCategory.listen((_) => _applyFilter());
+    _categorySubscription =
+        _categoryController.selectedCategory.listen((_) => _applyFilter());
   }
 
   @override
   void onClose() {
+    // QUAN TRỌNG: CategoryController sống xuyên suốt app (fenix: true) trong
+    // khi HomeController thì KHÔNG - nếu không hủy 2 subscription này,
+    // callback (_) => _applyFilter() cũ vẫn còn gắn vào
+    // _categoryController.selectedCategory sau khi HomeController này đã bị
+    // dispose. Lần tới danh mục đổi (Home được tạo lại, ví dụ sau khi đăng
+    // xuất/đăng nhập lại), callback CŨ vẫn fire, gọi _applyFilter() vốn đọc
+    // searchController.text - nhưng searchController lúc này ĐÃ dispose ở
+    // dưới → crash. Phải cancel trước khi dispose các controller/text field
+    // mà callback có thể đọc tới.
+    _targetPriceSubscription?.cancel();
+    _categorySubscription?.cancel();
     _searchDebounce?.cancel();
     scrollController.dispose();
     searchController.dispose();
@@ -169,6 +193,24 @@ class HomeController extends GetxController {
     }
 
     shownProducts.assignAll(list);
+
+    // Lọc theo tên/danh mục trước đây CHỈ chạy trên allProducts (những trang
+    // đã tải qua infinite-scroll) - sản phẩm khớp nhưng nằm ở trang CHƯA tải
+    // sẽ không bao giờ hiện ra dù nó tồn tại. Nếu đang lọc (tên hoặc danh
+    // mục) mà không ra kết quả nào trong số ĐÃ TẢI, nhưng server báo còn dữ
+    // liệu (hasMore) -> tự tải thêm trang tiếp theo; _loadProducts() gọi lại
+    // _applyFilter() ở cuối nên vòng này tự lặp tới khi tìm thấy hoặc tải
+    // hết toàn bộ danh sách. Không áp dụng khi KHÔNG lọc gì (list rỗng khi
+    // đó có nghĩa server thực sự chưa có sản phẩm nào, không phải do chưa
+    // tải đủ).
+    final isFiltering = selectedCategory != null || query.isNotEmpty;
+    if (isFiltering &&
+        list.isEmpty &&
+        hasMore.value &&
+        !isLoading.value &&
+        !isLoadingMore.value) {
+      _loadProducts();
+    }
   }
 
   // ─── Search callback ──────────────────────────────────────────
@@ -224,28 +266,22 @@ class HomeController extends GetxController {
   Future<void> refresh() => _loadProducts(reset: true);
 
   // ─── Giỏ hàng ─────────────────────────────────────────────────
-  void _updateCartCount() {
-    cartCount.value = _cartUseCase.count;
-  }
-
-  Future<void> promptAddToCart(
-    BuildContext context,
-    Product product,
-    GlobalKey addButtonKey,
-  ) async {
+  /// Không nhận BuildContext từ nơi gọi nữa - showCartQuantityDialog dùng
+  /// Get.dialog() (không cần context) và FlyingCartOverlay dùng
+  /// Get.overlayContext nội bộ. HomeController là 1 GetxController, không
+  /// nên cầm theo BuildContext của UI (phá vỡ tách biệt controller/view).
+  Future<void> promptAddToCart(Product product, GlobalKey addButtonKey) async {
     final quantity = await showCartQuantityDialog(
-      context: context,
       product: product,
       initialQuantity: 1,
     );
 
     if (quantity == null) return;
 
-    await addToCart(context, product, quantity, addButtonKey);
+    await addToCart(product, quantity, addButtonKey);
   }
 
   Future<void> addToCart(
-    BuildContext context,
     Product product,
     int quantity,
     GlobalKey addButtonKey,
@@ -255,7 +291,6 @@ class HomeController extends GetxController {
 
     if (startRect != null && endRect != null) {
       await FlyingCartOverlay.animate(
-        context: context,
         from: startRect,
         to: endRect,
         child: ClipRRect(
@@ -272,8 +307,17 @@ class HomeController extends GetxController {
       );
     }
 
-    await _cartUseCase.addItem(product, quantity: quantity);
-    _updateCartCount();
+    // Ghi qua CartController (nếu đang sống) để `items` của nó - nguồn hiển
+    // thị badge số lượng ở AppBar - cập nhật ngay, không cần đợi 1 lượt điều
+    // hướng nào để đồng bộ lại. CartController luôn được đăng ký sẵn từ
+    // HomeBinding nên trên thực tế nhánh else gần như không xảy ra, nhưng
+    // vẫn giữ để phòng khi binding thay đổi trong tương lai.
+    if (Get.isRegistered<CartController>()) {
+      await Get.find<CartController>().addProduct(product, quantity: quantity);
+    } else {
+      await _cartUseCase.addItem(product, quantity: quantity);
+    }
+
     await showAppMessageDialog(
       title: 'Đã thêm vào giỏ',
       message: '${product.name} x$quantity',
@@ -306,9 +350,8 @@ class HomeController extends GetxController {
     }
   }
 
-  void goToCart() async {
-    await Get.toNamed(AppRoutes.cart);
-    _updateCartCount();
+  void goToCart() {
+    Get.toNamed(AppRoutes.cart);
   }
 
   // ─── Đăng xuất ────────────────────────────────────────────────

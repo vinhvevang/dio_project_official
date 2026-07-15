@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/features/login/presentation/controllers/login_controller.dart';
+import 'package:dio_complete/features/login/presentation/validators/auth_validators.dart';
 import 'package:svg_image/svg_image.dart';
 
 class LoginPage extends GetView<LoginController> {
@@ -68,12 +69,7 @@ class _LoginFormFields extends GetView<LoginController> {
           label: 'Tên đăng nhập',
           required: true,
           prefixIcon: const Icon(Icons.person_outline),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Vui lòng nhập tên đăng nhập';
-            }
-            return null;
-          },
+          validator: AuthValidators.username,
           onChanged: (_) => controller.clearAuthError(),
         ),
         const SizedBox(height: 16),
@@ -101,12 +97,7 @@ class _PasswordField extends GetView<LoginController> {
         prefixIcon: const Icon(Icons.lock_outline),
         obscureText: controller.obscurePassword.value,
         textInputAction: TextInputAction.done,
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return 'Vui lòng nhập mật khẩu';
-          }
-          return null;
-        },
+        validator: AuthValidators.password,
         // Field này tự truyền suffixIcon (icon con mắt) nên AppTextFormField
         // sẽ KHÔNG tự hiện nút "x" mặc định của nó nữa (widget chỉ hiện 1
         // trong 2). Ghép chung nút "x" (chỉ hiện khi có chữ, y hệt cách

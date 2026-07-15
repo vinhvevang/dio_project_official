@@ -1,46 +1,28 @@
 import 'package:dio_complete/features/category/data/models/category_model.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 
-/// Model ĐỌC dữ liệu sản phẩm (những gì backend trả về qua GET). Chiều GHI
-/// (tạo/sửa sản phẩm) dùng 1 class khác - [ProductPayload] (product_payload
-/// .dart) - vì 2 chiều có SHAPE JSON khác nhau (đọc trả "category" là object
-/// lồng đầy đủ, ghi chỉ nhận "category_id" dạng số) nên tách hẳn 2 class thay
-/// vì nhồi chung 1 class rồi phải giữ 1 toJson() không ai dùng tới.
-class Product {
-  final int id;
-  final int status;
-  final String createdAt;
-  final String updatedAt;
-  final String name;
-  final String code;
-  final double price;
-  final int stock;
-  final String description;
-  final String image;
-
-  /// Backend trả danh mục dưới dạng OBJECT LỒNG "category": {...} (không phải
-  /// field phẳng "category_id") - xác nhận từ dữ liệu thật lấy về từ GET
-  /// /products. Nullable vì sản phẩm có thể chưa được gán danh mục.
-  final Category? category;
-
-  /// Tiện dùng để so sánh/lọc mà không cần null-check category? mỗi lần.
-  int? get categoryId => category?.id;
-
-  const Product({
-    required this.id,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.name,
-    required this.code,
-    required this.price,
-    required this.stock,
-    required this.description,
-    required this.image,
-    this.category,
+/// Model ĐỌC dữ liệu sản phẩm - kế thừa entity domain [Product] và thêm đúng
+/// 1 khả năng: parse từ JSON backend trả về (GET). Chiều GHI (tạo/sửa) dùng
+/// [ProductPayload] (product_payload.dart) - vẫn tách riêng theo lý do cũ:
+/// 2 chiều đọc/ghi khác shape JSON (đọc trả "category" object lồng, ghi nhận
+/// "category_id" dạng số).
+class ProductModel extends Product {
+  const ProductModel({
+    required super.id,
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+    required super.name,
+    required super.code,
+    required super.price,
+    required super.stock,
+    required super.description,
+    required super.image,
+    super.category,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    return ProductModel(
       id: json['id'] ?? 0,
       status: json['status'] ?? 0,
       createdAt: json['created_at'] ?? '',
@@ -50,11 +32,26 @@ class Product {
       price: _parseDouble(json['price']),
       stock: json['stock'] ?? 0,
       description: json['description'] ?? '',
-      image: json['image'] ?? '',
+      image: _normalizeImage(json['image']),
       category: json['category'] is Map
-          ? Category.fromJson(Map<String, dynamic>.from(json['category']))
+          ? CategoryModel.fromJson(Map<String, dynamic>.from(json['category']))
           : null,
     );
+  }
+
+  /// Backend có 1 URL ảnh MẶC ĐỊNH/PLACEHOLDER còn sót lại từ lúc phát triển
+  /// ("example.com" là domain IANA dành riêng cho tài liệu/ví dụ, không phải
+  /// ảnh thật) - tự gán cho sản phẩm không có ảnh, KỂ CẢ khi client đã gửi
+  /// lên null cho field ảnh lúc tạo/sửa. Coi giá trị này như "không có ảnh"
+  /// (chuỗi rỗng) ngay tại đây - điểm phân tích JSON DUY NHẤT - để mọi nơi
+  /// hiển thị/dùng tới ảnh sản phẩm (form sửa, lưới sản phẩm, trang chi
+  /// tiết, giỏ hàng) đều tự động không hiện/không cố tải URL giả này, không
+  /// cần sửa riêng từng nơi.
+  static const _placeholderImageUrl = 'https://example.com/image.png';
+
+  static String _normalizeImage(dynamic value) {
+    final raw = value is String ? value.trim() : '';
+    return raw == _placeholderImageUrl ? '' : raw;
   }
 
   /// Ép "price" về double an toàn: backend luôn trả số, nhưng phòng trường
@@ -64,33 +61,5 @@ class Product {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
-  }
-
-  Product copyWith({
-    int? id,
-    int? status,
-    String? createdAt,
-    String? updatedAt,
-    String? name,
-    String? code,
-    double? price,
-    int? stock,
-    String? description,
-    String? image,
-    Category? category,
-  }) {
-    return Product(
-      id: id ?? this.id,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      name: name ?? this.name,
-      code: code ?? this.code,
-      price: price ?? this.price,
-      stock: stock ?? this.stock,
-      description: description ?? this.description,
-      image: image ?? this.image,
-      category: category ?? this.category,
-    );
   }
 }

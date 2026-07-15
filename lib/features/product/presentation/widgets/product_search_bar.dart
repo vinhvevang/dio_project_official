@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_formatter.dart';
-import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 import 'package:dio_complete/features/product/presentation/controllers/home_controller.dart';
 
 /// Ô tìm kiếm dùng SearchAnchor.bar (Material 3) - bấm vào mở rộng thành

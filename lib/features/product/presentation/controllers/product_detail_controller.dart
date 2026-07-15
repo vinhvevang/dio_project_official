@@ -4,7 +4,7 @@ import 'package:dio_complete/core/widgets/confirm_dialog.dart';
 import 'package:dio_complete/core/widgets/app_message_dialog.dart';
 import 'package:dio_complete/features/cart/domain/entities/cart_item.dart';
 import 'package:dio_complete/features/cart/domain/usecases/cart_usecase.dart';
-import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 import 'package:dio_complete/features/product/domain/usecases/product_usecase.dart';
 import 'package:dio_complete/features/product/presentation/controllers/home_controller.dart';
 import 'package:dio_complete/features/product/presentation/controllers/product_detail_args.dart';
@@ -20,6 +20,16 @@ class ProductDetailController extends GetxController {
   final cartQuantity = 0.obs;
 
   late int _productId;
+
+  /// HomeController/CartController KHÔNG hoist thành field như _useCase ở
+  /// trên, vì 2 controller đó chỉ sống khi Home/Cart đang có trong stack
+  /// (không đăng ký global như ProductUseCase/CartUseCase) - hoist thẳng
+  /// bằng Get.find sẽ crash ngay lúc khởi tạo ProductDetailController nếu lỡ
+  /// có luồng nào đó mở thẳng màn Chi tiết mà chưa từng qua Home. Getter này
+  /// gom logic kiểm tra "đang sống hay không" về đúng 1 chỗ thay vì lặp lại
+  /// Get.isRegistered/Get.find rải rác trong từng hàm.
+  HomeController? get _homeControllerIfAlive =>
+      Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
 
   @override
   void onInit() {
@@ -73,9 +83,7 @@ class ProductDetailController extends GetxController {
 
     if (updated is Product) {
       product.value = updated;
-      if (Get.isRegistered<HomeController>()) {
-        Get.find<HomeController>().updateProductInList(updated);
-      }
+      _homeControllerIfAlive?.updateProductInList(updated);
       await _syncCartAfterProductChanged(edited: updated);
     } else if (updated == true) {
       // Reload lại thông tin sau khi sửa

@@ -1,49 +1,9 @@
 import 'dart:convert';
 import 'package:hive/hive.dart';
+import 'package:dio_complete/features/cart/data/mappers/cart_item_mapper.dart';
 import 'package:dio_complete/features/cart/domain/entities/cart_item.dart';
 import 'package:dio_complete/features/cart/domain/repositories/cart_repository.dart';
-import 'package:dio_complete/features/product/data/models/product_model.dart';
-
-/// Chuyển đổi CartItem <-> Map để lưu xuống Hive. Đây là chi tiết định dạng
-/// lưu trữ (data layer), không phải khái niệm domain, nên đặt cạnh
-/// CartRepositoryImpl thay vì trong entity CartItem (giữ entity thuần).
-extension CartItemMapping on CartItem {
-  Map<String, dynamic> toMap() => {
-        'product': {
-          'id': product.id,
-          'status': product.status,
-          'created_at': product.createdAt,
-          'updated_at': product.updatedAt,
-          'name': product.name,
-          'code': product.code,
-          'price': product.price,
-          'stock': product.stock,
-          'description': product.description,
-          'image': product.image,
-          if (product.category != null)
-            'category': {
-              'id': product.category!.id,
-              'status': product.category!.status,
-              'created_at': product.category!.createdAt,
-              'updated_at': product.category!.updatedAt,
-              'name': product.category!.name,
-            },
-        },
-        'quantity': quantity,
-      };
-
-  static CartItem fromMap(Map<String, dynamic> json) {
-    final productJson = json['product'];
-    final productMap = productJson is Map
-        ? Map<String, dynamic>.from(productJson)
-        : <String, dynamic>{};
-    final quantity = json['quantity'];
-    return CartItem(
-      product: Product.fromJson(productMap),
-      quantity: quantity is int ? quantity : 1,
-    );
-  }
-}
+import 'package:dio_complete/features/product/domain/entities/product.dart';
 
 class CartRepositoryImpl implements CartRepository {
   static const _boxName = 'cartBox';
@@ -51,24 +11,27 @@ class CartRepositoryImpl implements CartRepository {
 
   Box get _box => Hive.box(_boxName);
 
+  /// Parse danh sách item thô (List<dynamic> lấy từ Hive hoặc jsonDecode) -
+  /// dùng CartItemMapper.fromMap cho từng phần tử và LỌC BỎ (không throw)
+  /// những bản ghi hỏng/sai định dạng, thay vì để 1 bản ghi lỗi làm crash cả
+  /// màn giỏ hàng.
+  List<CartItem> _parseItems(List<dynamic> raw) {
+    return raw
+        .whereType<Map>()
+        .map((e) => CartItemMapper.fromMap(Map<String, dynamic>.from(e)))
+        .whereType<CartItem>()
+        .toList();
+  }
+
   @override
   List<CartItem> loadItems() {
     final raw = _box.get(_key);
     if (raw == null) return [];
-    if (raw is List) {
-      return raw
-          .whereType<Map>()
-          .map((e) => CartItemMapping.fromMap(Map<String, dynamic>.from(e)))
-          .toList();
-    }
+    if (raw is List) return _parseItems(raw);
+
     if (raw is String && raw.isNotEmpty) {
       final decoded = jsonDecode(raw);
-      if (decoded is List) {
-        return decoded
-            .whereType<Map>()
-            .map((e) => CartItemMapping.fromMap(Map<String, dynamic>.from(e)))
-            .toList();
-      }
+      if (decoded is List) return _parseItems(decoded);
     }
     return [];
   }
@@ -137,6 +100,6 @@ class CartRepositoryImpl implements CartRepository {
   int get count => loadItems().length;
 
   Future<void> _save(List<CartItem> items) async {
-    await _box.put(_key, items.map((e) => e.toMap()).toList());
+    await _box.put(_key, items.map(CartItemMapper.toMap).toList());
   }
 }
