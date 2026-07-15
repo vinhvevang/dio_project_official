@@ -11,7 +11,10 @@ class CategoryRepositoryImpl extends BaseDioRepository
   Future<List<Category>> getCategories() {
     return run(() async {
       final response = await dio.get('/categories');
-      return asMapList(unwrapData(response.data)).map(CategoryModel.fromJson).toList();
+      return asMapList(unwrapData(response.data))
+          .map(CategoryModel.fromJson)
+          .map((model) => model.toEntity())
+          .toList();
     }, fallbackMessage: 'Tải danh mục thất bại');
   }
 

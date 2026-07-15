@@ -52,7 +52,9 @@ class CartItemMapper {
     if (productJson is! Map) return null;
 
     try {
-      final product = ProductModel.fromJson(Map<String, dynamic>.from(productJson));
+      final product = ProductModel.fromJson(
+        Map<String, dynamic>.from(productJson),
+      ).toEntity();
       final quantity = json['quantity'];
       return CartItem(product: product, quantity: quantity is int ? quantity : 1);
     } catch (_) {

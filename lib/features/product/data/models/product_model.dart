@@ -1,24 +1,43 @@
 import 'package:dio_complete/features/category/data/models/category_model.dart';
 import 'package:dio_complete/features/product/domain/entities/product.dart';
 
-/// Model ĐỌC dữ liệu sản phẩm - kế thừa entity domain [Product] và thêm đúng
-/// 1 khả năng: parse từ JSON backend trả về (GET). Chiều GHI (tạo/sửa) dùng
-/// [ProductPayload] (product_payload.dart) - vẫn tách riêng theo lý do cũ:
-/// 2 chiều đọc/ghi khác shape JSON (đọc trả "category" object lồng, ghi nhận
-/// "category_id" dạng số).
-class ProductModel extends Product {
+/// Model ĐỌC dữ liệu sản phẩm - đại diện ĐÚNG shape JSON mà backend GET trả
+/// về.
+///
+/// KHÔNG kế thừa (`extends`) entity domain [Product] - xem category_model
+/// .dart để biết đầy đủ lý do (Model/Entity là 2 class tách biệt, chuyển đổi
+/// qua [toEntity] tường minh thay vì dựa vào quan hệ is-a của kế thừa).
+/// [category] ở đây cũng là [CategoryModel] (data), không phải [Category]
+/// (domain) - convert cả 2 cùng lúc trong [toEntity].
+///
+/// Chiều GHI (tạo/sửa) dùng [ProductPayload] (domain/entities/product_payload
+/// .dart) - vẫn tách riêng theo lý do cũ: 2 chiều đọc/ghi khác shape JSON
+/// (đọc trả "category" object lồng, ghi nhận "category_id" dạng số).
+class ProductModel {
+  final int id;
+  final int status;
+  final String createdAt;
+  final String updatedAt;
+  final String name;
+  final String code;
+  final double price;
+  final int stock;
+  final String description;
+  final String image;
+  final CategoryModel? category;
+
   const ProductModel({
-    required super.id,
-    required super.status,
-    required super.createdAt,
-    required super.updatedAt,
-    required super.name,
-    required super.code,
-    required super.price,
-    required super.stock,
-    required super.description,
-    required super.image,
-    super.category,
+    required this.id,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.name,
+    required this.code,
+    required this.price,
+    required this.stock,
+    required this.description,
+    required this.image,
+    this.category,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +55,26 @@ class ProductModel extends Product {
       category: json['category'] is Map
           ? CategoryModel.fromJson(Map<String, dynamic>.from(json['category']))
           : null,
+    );
+  }
+
+  /// Chuyển Model sang Entity - đây là RANH GIỚI DUY NHẤT mà data layer
+  /// "chạm" vào domain layer. Convert luôn [category] lồng bên trong (nếu
+  /// có) sang [Category] domain tương ứng qua chính [CategoryModel.toEntity]
+  /// của nó - không lặp lại logic map field ở đây.
+  Product toEntity() {
+    return Product(
+      id: id,
+      status: status,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      name: name,
+      code: code,
+      price: price,
+      stock: stock,
+      description: description,
+      image: image,
+      category: category?.toEntity(),
     );
   }
 

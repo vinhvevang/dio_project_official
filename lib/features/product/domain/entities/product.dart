@@ -4,11 +4,12 @@ import 'package:dio_complete/features/category/domain/entities/category.dart';
 /// JSON/HTTP (không có fromJson/toJson). Domain layer chỉ nên phụ thuộc vào
 /// entity, không được phụ thuộc ngược lại data layer.
 ///
-/// [ProductModel] (data/models/product_model.dart) kế thừa class này và
-/// thêm `fromJson` - vì ProductModel LÀ MỘT Product (is-a, qua `extends`),
-/// mọi nơi cần kiểu `Product` (usecase, controller, UI) đều nhận trực tiếp
-/// instance ProductModel repository trả về mà không cần bước "map" riêng,
-/// trong khi domain/entities vẫn không hề import ngược về data/models.
+/// [ProductModel] (data/models/product_model.dart) là 1 class HOÀN TOÀN
+/// TÁCH BIỆT (không kế thừa class này) đại diện đúng shape JSON backend trả
+/// về; nó có `fromJson` để parse và `toEntity()` để CHUYỂN ĐỔI tường minh
+/// sang [Product] này. Repository luôn gọi `toEntity()` trước khi trả dữ
+/// liệu ra khỏi data layer, nên usecase/controller/UI chỉ bao giờ thấy đúng
+/// [Product], không bao giờ thấy `ProductModel`.
 class Product {
   final int id;
   final int status;

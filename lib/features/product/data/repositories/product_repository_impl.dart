@@ -10,8 +10,10 @@ import 'package:dio_complete/features/product/domain/repositories/product_reposi
 
 class ProductRepositoryImpl extends BaseDioRepository
     implements ProductRepository {
-  List<Product> _extractProducts(dynamic raw) =>
-      asMapList(unwrapData(raw)).map(ProductModel.fromJson).toList();
+  List<Product> _extractProducts(dynamic raw) => asMapList(unwrapData(raw))
+      .map(ProductModel.fromJson)
+      .map((model) => model.toEntity())
+      .toList();
 
   Map<String, dynamic> _extractSingleProductMap(dynamic raw) {
     final node = unwrapData(raw);
@@ -60,7 +62,7 @@ class ProductRepositoryImpl extends BaseDioRepository
   Future<Product> getProductDetail(int id) async {
     try {
       final response = await dio.get('/products/$id');
-      return ProductModel.fromJson(_extractSingleProductMap(response.data));
+      return ProductModel.fromJson(_extractSingleProductMap(response.data)).toEntity();
     } on DioException catch (e) {
       // 404 hoặc lỗi khác: BE này đôi khi không cho GET chi tiết trực tiếp dù
       // sản phẩm có tồn tại - dự phòng bằng cách tìm trong danh sách đầy đủ
@@ -80,9 +82,9 @@ class ProductRepositoryImpl extends BaseDioRepository
 
       // Trường hợp thường gặp: backend trả về nguyên object sản phẩm vừa tạo.
       if (node is Map || node is List) {
-        return ProductModel.fromJson(
-          _extractSingleProductMap(node),
-        ).copyWith(category: payload.category);
+        return ProductModel.fromJson(_extractSingleProductMap(node))
+            .toEntity()
+            .copyWith(category: payload.category);
       }
 
       // Backend chỉ trả về id (số) của sản phẩm vừa tạo, không echo lại
@@ -106,9 +108,9 @@ class ProductRepositoryImpl extends BaseDioRepository
       final node = unwrapData(response.data);
 
       if (node is Map || node is List) {
-        return ProductModel.fromJson(
-          _extractSingleProductMap(node),
-        ).copyWith(category: payload.category);
+        return ProductModel.fromJson(_extractSingleProductMap(node))
+            .toEntity()
+            .copyWith(category: payload.category);
       }
 
       // Backend không echo lại object sản phẩm sau khi sửa -> gọi lại chi
