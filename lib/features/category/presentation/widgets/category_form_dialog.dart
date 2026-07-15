@@ -29,8 +29,8 @@ class CategoryFormDialog extends StatelessWidget {
           focusNode: controller.nameFocusNode,
           autofocus: true,
           label: 'Tên danh mục',
+          required: true,
           hintText: 'VD: Đồ uống',
-          onChanged: (_) => controller.fieldError.value = '',
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Tên danh mục không được để trống';

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/storage/token_storage.dart';
@@ -8,6 +10,7 @@ import 'package:dio_complete/core/widgets/flying_cart_overlay.dart';
 import 'package:dio_complete/features/product/data/models/product_model.dart';
 import 'package:dio_complete/features/cart/domain/usecases/cart_usecase.dart';
 import 'package:dio_complete/features/product/domain/usecases/product_usecase.dart';
+import 'package:dio_complete/features/product/presentation/controllers/product_detail_args.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_controller.dart';
 import 'package:dio_complete/routes/app_routes.dart';
 
@@ -29,11 +32,28 @@ class HomeController extends GetxController {
   final cartCount = 0.obs;
   final cartIconKey = GlobalKey();
 
+  /// Cache GlobalKey của nút "thêm vào giỏ" theo id sản phẩm - PHẢI tái dùng
+  /// đúng 1 instance qua các lần rebuild item trong danh sách (thay vì tạo
+  /// GlobalKey() mới mỗi lần builder chạy) vì GlobalKey cần ổn định để giữ
+  /// đúng định danh RenderObject (dùng tính điểm bắt đầu hoạt ảnh bay vào
+  /// giỏ) - tạo mới liên tục khiến hoạt ảnh mất điểm gốc/không định danh
+  /// đúng phần tử qua các lần rebuild.
+  final Map<int, GlobalKey> _addButtonKeys = {};
+
+  GlobalKey addButtonKeyFor(int productId) =>
+      _addButtonKeys.putIfAbsent(productId, () => GlobalKey());
+
   // ─── Tìm kiếm ────────────────────────────────────────────────
   // SearchController (Flutter, kế thừa TextEditingController) để dùng với
   // SearchAnchor.bar - đọc trực tiếp searchController.text lúc lọc thay vì
   // lưu thêm 1 biến "searchText" riêng dễ bị lệch với nội dung ô nhập.
   final searchController = SearchController();
+
+  /// Debounce cho việc lọc theo từng ký tự gõ - không lọc lại NGAY mỗi ký tự
+  /// (tốn công lọc toàn bộ allProducts liên tục khi người dùng còn đang gõ
+  /// dở), chỉ lọc khi người dùng NGỪNG gõ được [_searchDebounceDuration].
+  Timer? _searchDebounce;
+  static const _searchDebounceDuration = Duration(milliseconds: 350);
 
   /// Lịch sử tìm kiếm gần đây (mới nhất ở đầu). Chỉ ghi khi người dùng THẬT
   /// SỰ chốt một lượt tìm kiếm (Enter hoặc chọn gợi ý), không ghi theo từng
@@ -76,6 +96,7 @@ class HomeController extends GetxController {
 
   @override
   void onClose() {
+    _searchDebounce?.cancel();
     scrollController.dispose();
     searchController.dispose();
     priceFilterController.dispose();
@@ -151,7 +172,20 @@ class HomeController extends GetxController {
   }
 
   // ─── Search callback ──────────────────────────────────────────
-  void onSearchChanged(String _) => _applyFilter();
+  /// Gọi mỗi ký tự gõ (SearchAnchor.bar onChanged) - DEBOUNCE lại, không lọc
+  /// ngay lập tức để tránh lọc toàn bộ danh sách liên tục khi đang gõ dở.
+  void onSearchChanged(String _) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(_searchDebounceDuration, _applyFilter);
+  }
+
+  /// Lọc lại NGAY (không debounce) - dùng khi người dùng đã CHỐT xong 1 lượt
+  /// tìm kiếm (nhấn Enter, chọn gợi ý hoặc chọn lịch sử) thay vì đang gõ dở,
+  /// nên không cần chờ thêm.
+  void applySearchImmediately() {
+    _searchDebounce?.cancel();
+    _applyFilter();
+  }
 
   /// Ghi 1 từ khóa vào lịch sử tìm kiếm gần đây. Chỉ gọi khi người dùng chốt
   /// một lượt tìm kiếm (Enter hoặc chọn gợi ý).
@@ -248,17 +282,18 @@ class HomeController extends GetxController {
   }
 
   Rect? _rectFor(GlobalKey key) {
-    final context = key.currentContext;
-    if (context == null) return null;
-    final box = context.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return null;
-    final topLeft = box.localToGlobal(Offset.zero);
-    return topLeft & box.size;
+    final renderObject = key.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) return null;
+    final topLeft = renderObject.localToGlobal(Offset.zero);
+    return topLeft & renderObject.size;
   }
 
   // ─── Điều hướng ───────────────────────────────────────────────
   void goToDetail(Product product) async {
-    final changed = await Get.toNamed(AppRoutes.productDetail, arguments: product);
+    final changed = await Get.toNamed(
+      AppRoutes.productDetail,
+      arguments: ProductDetailArgs.fromProduct(product),
+    );
     if (changed == true) refresh();
   }
 
@@ -295,21 +330,6 @@ class HomeController extends GetxController {
       Get.offAllNamed(AppRoutes.login);
     }
   }
-
-  // // ─── Reset dữ liệu BE ────────────────────────────────────────
-  // Future<void> resetData() async {
-  //   try {
-  //     await _productUseCase.resetData();
-  //     await refresh();
-  //     Get.snackbar('Thành công', 'Đã reset dữ liệu',
-  //         snackPosition: SnackPosition.BOTTOM,
-  //         backgroundColor: Colors.green.shade100);
-  //   } catch (e) {
-  //     Get.snackbar('Lỗi', e.toString().replaceAll('Exception: ', ''),
-  //         snackPosition: SnackPosition.BOTTOM,
-  //         backgroundColor: Colors.red.shade100);
-  //   }
-  // }
 
   void prependProduct(Product product) {
     allProducts.insert(0, product);

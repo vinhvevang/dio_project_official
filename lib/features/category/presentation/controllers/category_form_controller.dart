@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:dio_complete/features/category/data/models/category_model.dart';
 
 /// Điều khiển form Thêm/Sửa danh mục. Là object Dart thường (không qua
@@ -18,7 +17,6 @@ class CategoryFormController {
   final formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final nameFocusNode = FocusNode();
-  final fieldError = ''.obs;
 
   /// Validate và trả về tên đã nhập nếu hợp lệ, null nếu chưa (để dialog biết
   /// không nên đóng).

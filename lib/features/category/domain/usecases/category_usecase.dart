@@ -1,4 +1,5 @@
 import 'package:dio_complete/features/category/data/models/category_model.dart';
+import 'package:dio_complete/features/category/data/models/category_payload.dart';
 import 'package:dio_complete/features/category/domain/repositories/category_repository.dart';
 
 class CategoryUseCase {
@@ -8,11 +9,11 @@ class CategoryUseCase {
 
   Future<List<Category>> loadCategories() => _repository.getCategories();
 
-  Future<int> createCategory({required String name}) =>
-      _repository.createCategory(name: name);
+  Future<int> createCategory(CategoryPayload payload) =>
+      _repository.createCategory(payload);
 
-  Future<void> updateCategory({required int id, required String name}) =>
-      _repository.updateCategory(id: id, name: name);
+  Future<void> updateCategory(int id, CategoryPayload payload) =>
+      _repository.updateCategory(id, payload);
 
   Future<void> deleteCategory(int id) => _repository.deleteCategory(id);
 }

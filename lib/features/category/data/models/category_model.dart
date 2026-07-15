@@ -1,3 +1,8 @@
+/// Model ĐỌC dữ liệu danh mục (những gì backend trả về qua GET). Chiều GHI
+/// (tạo/sửa danh mục) dùng [CategoryPayload] (category_payload.dart) - tách
+/// riêng cùng lý do với Product/ProductPayload: 2 chiều đọc/ghi không nhất
+/// thiết cùng shape, và trước đây toJson() ở đây không được nơi nào gọi tới
+/// (repository tự dựng map tay riêng).
 class Category {
   final int id;
   final int status;
@@ -5,7 +10,7 @@ class Category {
   final String updatedAt;
   final String name;
 
-  Category({
+  const Category({
     required this.id,
     required this.status,
     required this.createdAt,
@@ -21,10 +26,6 @@ class Category {
       updatedAt: json['updated_at'] ?? '',
       name: json['name'] ?? '',
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'name': name};
   }
 
   Category copyWith({

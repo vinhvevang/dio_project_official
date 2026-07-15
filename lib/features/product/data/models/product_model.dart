@@ -1,5 +1,10 @@
 import 'package:dio_complete/features/category/data/models/category_model.dart';
 
+/// Model ĐỌC dữ liệu sản phẩm (những gì backend trả về qua GET). Chiều GHI
+/// (tạo/sửa sản phẩm) dùng 1 class khác - [ProductPayload] (product_payload
+/// .dart) - vì 2 chiều có SHAPE JSON khác nhau (đọc trả "category" là object
+/// lồng đầy đủ, ghi chỉ nhận "category_id" dạng số) nên tách hẳn 2 class thay
+/// vì nhồi chung 1 class rồi phải giữ 1 toJson() không ai dùng tới.
 class Product {
   final int id;
   final int status;
@@ -20,7 +25,7 @@ class Product {
   /// Tiện dùng để so sánh/lọc mà không cần null-check category? mỗi lần.
   int? get categoryId => category?.id;
 
-  Product({
+  const Product({
     required this.id,
     required this.status,
     required this.createdAt,
@@ -42,7 +47,7 @@ class Product {
       updatedAt: json['updated_at'] ?? '',
       name: json['name'] ?? '',
       code: json['code'] ?? '',
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      price: _parseDouble(json['price']),
       stock: json['stock'] ?? 0,
       description: json['description'] ?? '',
       image: json['image'] ?? '',
@@ -52,20 +57,13 @@ class Product {
     );
   }
 
-  /// Lưu ý: khi GHI (create/update), backend nhận "category_id" (số) chứ
-  /// không phải object "category" lồng như lúc ĐỌC - xem product_service.dart.
-  /// toJson() này hiện không được service dùng trực tiếp (create/update tự
-  /// dựng map riêng để tách rõ 2 chiều đọc/ghi), giữ lại cho mục đích chung.
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'code': code,
-      'price': price,
-      'stock': stock,
-      'description': description,
-      'image': image,
-      if (category != null) 'category_id': category!.id,
-    };
+  /// Ép "price" về double an toàn: backend luôn trả số, nhưng phòng trường
+  /// hợp trả về dạng chuỗi ("120000") thì vẫn parse được thay vì crash bằng
+  /// 1 phép `as num` cứng.
+  static double _parseDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
   }
 
   Product copyWith({

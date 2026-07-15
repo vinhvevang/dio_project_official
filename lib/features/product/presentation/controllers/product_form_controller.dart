@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_message_dialog.dart';
-import 'package:dio_complete/features/category/data/models/category_model.dart';
+import 'package:dio_complete/features/category/data/models/category_model.dart' ;
 import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/data/models/product_payload.dart';
 import 'package:dio_complete/features/product/domain/usecases/product_usecase.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_controller.dart';
 
@@ -41,8 +43,12 @@ class ProductFormController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    if (Get.arguments is Product) {
-      _existingProduct = Get.arguments as Product;
+    // Gán vào biến local trước để Dart tự suy luận kiểu (type promotion) sau
+    // khi kiểm tra `is Product`, tránh phải ép kiểu tường minh bằng `as`
+    // (Get.arguments là 1 getter nên bản thân nó không tự được promote).
+    final arguments = Get.arguments;
+    if (arguments is Product) {
+      _existingProduct = arguments;
       _prefillForm(_existingProduct!);
     }
     // Sync imageUrl observable khi text thay đổi
@@ -121,24 +127,20 @@ class ProductFormController extends GetxController {
 
     isLoading.value = true;
     try {
-      final name = nameController.text.trim();
-      final code = codeController.text.trim();
-      final price = double.parse(priceController.text.trim());
-      final stock = int.tryParse(stockController.text.trim()) ?? 0;
-      final description = descriptionController.text.trim();
-      final image = imageController.text.trim();
-      final category = selectedCategory.value!;
+      final payload = ProductPayload(
+        name: nameController.text.trim(),
+        code: codeController.text.trim(),
+        price: double.parse(priceController.text.trim()),
+        stock: int.tryParse(stockController.text.trim()) ?? 0,
+        description: descriptionController.text.trim(),
+        image: imageController.text.trim(),
+        category: selectedCategory.value!,
+      );
 
       if (isEditMode) {
         final updatedProduct = await _useCase.updateProduct(
-          id: _existingProduct!.id,
-          name: name,
-          code: code,
-          price: price,
-          stock: stock,
-          description: description,
-          image: image,
-          category: category,
+          _existingProduct!.id,
+          payload,
         );
         Get.back(result: updatedProduct);
         await showAppMessageDialog(
@@ -147,15 +149,7 @@ class ProductFormController extends GetxController {
           isSuccess: true,
         );
       } else {
-        final createdProduct = await _useCase.createProduct(
-          name: name,
-          code: code,
-          price: price,
-          stock: stock,
-          description: description,
-          image: image,
-          category: category,
-        );
+        final createdProduct = await _useCase.createProduct(payload);
         Get.back(result: createdProduct);
         await showAppMessageDialog(
           title: 'Thành công',
@@ -164,9 +158,9 @@ class ProductFormController extends GetxController {
         );
       }
     } catch (e, st) {
-      print('=== LỖI TẠO/SỬA SP ===');
-      print(e);
-      print(st);
+      if (kDebugMode) {
+        debugPrint('=== LỖI TẠO/SỬA SP ===\n$e\n$st');
+      }
       fieldError.value = e.toString().replaceAll('Exception: ', '');
       await showAppMessageDialog(
         title: 'Lỗi',

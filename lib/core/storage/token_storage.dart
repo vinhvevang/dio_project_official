@@ -13,7 +13,8 @@ class TokenStorage {
   }
 
   static String? getToken() {
-    return _box.get(_tokenKey) as String?;
+    final value = _box.get(_tokenKey);
+    return value is String ? value : null;
   }
 
   static Future<void> clearToken() async {
@@ -29,10 +30,10 @@ class TokenStorage {
   }
 
   static Map<String, String>? getCredentials() {
-    final username = _box.get(_usernameKey) as String?;
-    final password = _box.get(_passwordKey) as String?;
-    if (username == null || password == null) return null;
-    return {'username': username, 'password': password};
+    final rawUsername = _box.get(_usernameKey);
+    final rawPassword = _box.get(_passwordKey);
+    if (rawUsername is! String || rawPassword is! String) return null;
+    return {'username': rawUsername, 'password': rawPassword};
   }
 
   static Future<void> clearCredentials() async {

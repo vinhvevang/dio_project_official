@@ -3,15 +3,13 @@ import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/confirm_dialog.dart';
 import 'package:dio_complete/core/widgets/app_message_dialog.dart';
 import 'package:dio_complete/features/category/data/models/category_model.dart';
+import 'package:dio_complete/features/category/data/models/category_payload.dart';
 import 'package:dio_complete/features/category/domain/usecases/category_usecase.dart';
-import 'package:dio_complete/features/product/domain/usecases/product_usecase.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_form_controller.dart';
 import 'package:dio_complete/features/category/presentation/widgets/category_form_dialog.dart';
-import 'package:dio_complete/features/product/presentation/controllers/home_controller.dart';
 
 class CategoryController extends GetxController {
   final _categoryUseCase = Get.find<CategoryUseCase>();
-  final _productUseCase = Get.find<ProductUseCase>();
 
   final categories = <Category>[].obs;
 
@@ -19,7 +17,6 @@ class CategoryController extends GetxController {
   final selectedCategory = Rx<Category?>(null);
 
   final isLoading = false.obs;
-  final isDistributing = false.obs;
   final isSubmittingCategory = false.obs;
 
   @override
@@ -59,7 +56,9 @@ class CategoryController extends GetxController {
 
     isSubmittingCategory.value = true;
     try {
-      final id = await _categoryUseCase.createCategory(name: name);
+      final id = await _categoryUseCase.createCategory(
+        CategoryPayload(name: name),
+      );
       // API tạo danh mục chỉ trả về id (data: 5), không trả nguyên object,
       // nên tự dựng Category cục bộ để cập nhật danh sách ngay, không cần
       // gọi lại loadCategories().
@@ -93,7 +92,10 @@ class CategoryController extends GetxController {
     if (name == null) return;
 
     try {
-      await _categoryUseCase.updateCategory(id: category.id, name: name);
+      await _categoryUseCase.updateCategory(
+        category.id,
+        CategoryPayload(name: name),
+      );
 
       final updated = category.copyWith(
         name: name,
@@ -148,72 +150,6 @@ class CategoryController extends GetxController {
         title: 'Lỗi',
         message: e.toString().replaceAll('Exception: ', ''),
       );
-    }
-  }
-
-  /// Giải pháp tạm thời: backend chưa có sẵn category_id cho các sản phẩm đã
-  /// tồn tại từ trước, nên chia đều (round-robin) toàn bộ sản phẩm hiện có
-  /// vào các danh mục đã tạo, gọi PUT /products/:id thật cho từng sản phẩm để
-  /// lưu lại trên backend - không phải chỉ hiển thị giả ở client.
-  Future<void> distributeProductsIntoCategories() async {
-    if (categories.isEmpty) {
-      await showAppMessageDialog(
-        title: 'Lỗi',
-        message: 'Chưa có danh mục nào để phân bổ - tạo danh mục trước đã',
-      );
-      return;
-    }
-
-    final confirmed = await showConfirmDialog(
-      title: 'Phân bổ sản phẩm vào danh mục',
-      message:
-          'Thao tác này sẽ gán lại danh mục cho TẤT CẢ sản phẩm hiện có, '
-          'chia đều vào ${categories.length} danh mục đã tạo. Chỉ nên dùng '
-          'tạm thời cho sản phẩm cũ chưa có danh mục. Tiếp tục?',
-      confirmLabel: 'Phân bổ',
-      isDestructive: false,
-    );
-
-    if (!confirmed) return;
-
-    isDistributing.value = true;
-    try {
-      final result = await _productUseCase.getProducts(page: 1, limit: 1000);
-      final products = result.products;
-
-      for (var i = 0; i < products.length; i++) {
-        final product = products[i];
-        final category = categories[i % categories.length];
-
-        await _productUseCase.updateProduct(
-          id: product.id,
-          name: product.name,
-          code: product.code,
-          price: product.price,
-          stock: product.stock,
-          description: product.description,
-          image: product.image,
-          category: category,
-        );
-      }
-
-      await showAppMessageDialog(
-        title: 'Thành công',
-        message: 'Đã phân bổ ${products.length} sản phẩm vào ${categories.length} danh mục',
-        isSuccess: true,
-      );
-
-      // Home đang mở thì tải lại danh sách để thấy category_id mới ngay.
-      if (Get.isRegistered<HomeController>()) {
-        await Get.find<HomeController>().refresh();
-      }
-    } catch (e) {
-      await showAppMessageDialog(
-        title: 'Lỗi',
-        message: e.toString().replaceAll('Exception: ', ''),
-      );
-    } finally {
-      isDistributing.value = false;
     }
   }
 }

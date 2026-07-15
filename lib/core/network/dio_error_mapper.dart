@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 /// Lấy message lỗi an toàn từ DioException, không giả định cứng error body
 /// luôn là { "message": "..." } - dùng chung cho mọi service (auth, product,
@@ -6,8 +7,11 @@ import 'package:dio/dio.dart';
 String dioErrorMessage(DioException e, String fallback) {
   final data = e.response?.data;
   final status = e.response?.statusCode;
-  // ignore: avoid_print
-  print('DioException status=$status data=$data');
+  // Chỉ log ở debug build - tránh in dữ liệu response (có thể nhạy cảm) ra
+  // log của bản release.
+  if (kDebugMode) {
+    debugPrint('DioException status=$status data=$data');
+  }
 
   if (data is Map && data['message'] != null) {
     return data['message'].toString();

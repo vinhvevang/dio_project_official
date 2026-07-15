@@ -32,10 +32,17 @@ extension CartItemMapping on CartItem {
         'quantity': quantity,
       };
 
-  static CartItem fromMap(Map<String, dynamic> json) => CartItem(
-        product: Product.fromJson(Map<String, dynamic>.from(json['product'] as Map)),
-        quantity: json['quantity'] ?? 1,
-      );
+  static CartItem fromMap(Map<String, dynamic> json) {
+    final productJson = json['product'];
+    final productMap = productJson is Map
+        ? Map<String, dynamic>.from(productJson)
+        : <String, dynamic>{};
+    final quantity = json['quantity'];
+    return CartItem(
+      product: Product.fromJson(productMap),
+      quantity: quantity is int ? quantity : 1,
+    );
+  }
 }
 
 class CartRepositoryImpl implements CartRepository {
@@ -55,11 +62,13 @@ class CartRepositoryImpl implements CartRepository {
           .toList();
     }
     if (raw is String && raw.isNotEmpty) {
-      final decoded = jsonDecode(raw) as List<dynamic>;
-      return decoded
-          .whereType<Map>()
-          .map((e) => CartItemMapping.fromMap(Map<String, dynamic>.from(e)))
-          .toList();
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded
+            .whereType<Map>()
+            .map((e) => CartItemMapping.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
+      }
     }
     return [];
   }

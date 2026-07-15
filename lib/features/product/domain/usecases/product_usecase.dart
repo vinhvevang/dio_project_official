@@ -1,5 +1,5 @@
-import 'package:dio_complete/features/category/data/models/category_model.dart';
 import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/data/models/product_payload.dart';
 import 'package:dio_complete/features/product/domain/entities/product_result.dart';
 import 'package:dio_complete/features/product/domain/repositories/product_repository.dart';
 
@@ -14,47 +14,11 @@ class ProductUseCase {
 
   Future<Product> getProductDetail(int id) => _repository.getProductDetail(id);
 
-  Future<Product> createProduct({
-    required String name,
-    required String code,
-    required double price,
-    required int stock,
-    required String description,
-    required String image,
-    required Category category,
-  }) {
-    return _repository.createProduct(
-      name: name,
-      code: code,
-      price: price,
-      stock: stock,
-      description: description,
-      image: image,
-      category: category,
-    );
-  }
+  Future<Product> createProduct(ProductPayload payload) =>
+      _repository.createProduct(payload);
 
-  Future<Product> updateProduct({
-    required int id,
-    required String name,
-    required String code,
-    required double price,
-    required int stock,
-    required String description,
-    required String image,
-    required Category category,
-  }) {
-    return _repository.updateProduct(
-      id: id,
-      name: name,
-      code: code,
-      price: price,
-      stock: stock,
-      description: description,
-      image: image,
-      category: category,
-    );
-  }
+  Future<Product> updateProduct(int id, ProductPayload payload) =>
+      _repository.updateProduct(id, payload);
 
   Future<void> deleteProduct(int id) => _repository.deleteProduct(id);
 

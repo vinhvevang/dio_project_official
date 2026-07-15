@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:dio_complete/core/widgets/app_field_label.dart';
 
-/// Ô nhập dùng chung cho toàn app: có nút "x" xóa nhanh nội dung (chỉ hiện khi
-/// có chữ), và hỗ trợ [nextFocus]/[onSubmit] để nhấn Enter/Next tự chuyển
-/// sang field kế tiếp hoặc submit luôn ở field cuối - không cần tự viết
-/// FocusScope.of(context).requestFocus(...) lặp lại ở từng nơi gọi.
+/// Ô nhập dùng chung cho toàn app:
+/// - Tên field hiển thị PHÍA TRÊN ô nhập (qua [AppFieldLabel]), kèm dấu "*"
+///   đỏ khi [required] là true - thay vì nhồi chữ "(bắt buộc)" vào label và
+///   dùng labelText nổi bên trong viền như trước.
+/// - Có nút "x" xóa nhanh nội dung (chỉ hiện khi có chữ).
+/// - Hỗ trợ [nextFocus]/[onSubmit] để nhấn Enter/Next tự chuyển sang field kế
+///   tiếp hoặc submit luôn ở field cuối - không cần tự viết
+///   FocusScope.of(context).requestFocus(...) lặp lại ở từng nơi gọi.
 class AppTextFormField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
+  final bool required;
   final String? hintText;
   final String? Function(String?)? validator;
   final bool obscureText;
@@ -15,7 +21,6 @@ class AppTextFormField extends StatelessWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
-  // final bool isSubmit;
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final void Function(String)? onChanged;
@@ -35,7 +40,7 @@ class AppTextFormField extends StatelessWidget {
     super.key,
     required this.controller,
     required this.label,
-    // this.isSubmit = false,
+    this.required = false,
     this.hintText,
     this.validator,
     this.obscureText = false,
@@ -89,30 +94,37 @@ class AppTextFormField extends StatelessWidget {
       );
     }
 
-    return TextFormField(
-      // autovalidateMode: isSubmit ? AutovalidateMode.onUserInteraction :  AutovalidateMode.disabled,
-      controller: controller,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      maxLines: obscureText ? 1 : maxLines,
-      textInputAction: effectiveTextInputAction,
-      onChanged: onChanged,
-      onEditingComplete:
-          (nextFocus != null || onSubmit != null || onEditingComplete != null)
-          ? handleEditingComplete
-          : null,
-      autovalidateMode: autovalidateMode,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        prefixIcon: prefixIcon,
-        suffixIcon: buildSuffixIcon(),
-        border: const OutlineInputBorder(),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppFieldLabel(label: label, required: required),
+        TextFormField(
+          controller: controller,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          maxLines: obscureText ? 1 : maxLines,
+          textInputAction: effectiveTextInputAction,
+          onChanged: onChanged,
+          onEditingComplete:
+              (nextFocus != null ||
+                  onSubmit != null ||
+                  onEditingComplete != null)
+              ? handleEditingComplete
+              : null,
+          autovalidateMode: autovalidateMode,
+          validator: validator,
+          decoration: InputDecoration(
+            hintText: hintText,
+            prefixIcon: prefixIcon,
+            suffixIcon: buildSuffixIcon(),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+      ],
     );
   }
 }

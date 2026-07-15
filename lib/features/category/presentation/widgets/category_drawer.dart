@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_controller.dart';
 
 /// Drawer kéo từ mép trái (tự động nhờ Scaffold.drawer) để chọn danh mục lọc
@@ -18,7 +19,7 @@ class CategoryDrawer extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
-              color: Color(0xFFF24E1E),
+              color: AppColors.primary,
               child: const Row(
                 children: [
                   Icon(Icons.category_outlined, color: Colors.white),
@@ -36,9 +37,15 @@ class CategoryDrawer extends StatelessWidget {
             ),
             Expanded(
               child: Obx(() {
-                if (controller.isLoading.value && controller.categories.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+                // "Tất cả sản phẩm" PHẢI luôn hiện ngay, kể cả khi danh mục
+                // còn đang tải - trước đây tile này nằm CÙNG bên trong nhánh
+                // "đang tải -> chỉ hiện spinner" nên bị ẩn theo, khiến người
+                // mới mở app/mở drawer lần đầu không thấy được lựa chọn "Tất
+                // cả" (dù nó đã là lựa chọn mặc định phía sau, selectedCategory
+                // vẫn = null). Giờ tách riêng: spinner CHỈ áp dụng cho phần
+                // danh sách danh mục bên dưới.
+                final isLoadingCategories =
+                    controller.isLoading.value && controller.categories.isEmpty;
 
                 return ListView(
                   padding: EdgeInsets.zero,
@@ -51,42 +58,52 @@ class CategoryDrawer extends StatelessWidget {
                       onTap: () => controller.selectCategory(null),
                     ),
                     const Divider(height: 1),
-                    if (controller.categories.isEmpty)
+                    if (isLoadingCategories)
                       const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text(
-                          'Chưa có danh mục nào',
-                          style: TextStyle(color: Colors.grey),
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else ...[
+                      if (controller.categories.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'Chưa có danh mục nào',
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         ),
-                      ),
-                    ...controller.categories.map((category) {
-                      final isSelected =
-                          controller.selectedCategory.value?.id == category.id;
+                      ...controller.categories.map((category) {
+                        final isSelected = controller.selectedCategory.value
+                                ?.id ==
+                            category.id;
 
-                      return ListTile(
-                        leading: const Icon(Icons.label_outline),
-                        title: Text(category.name),
-                        selected: isSelected,
-                        selectedTileColor: Colors.blue.shade50,
-                        onTap: () => controller.selectCategory(category),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 20),
-                              tooltip: 'Sửa danh mục',
-                              onPressed: () => controller.openEditDialog(category),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline,
-                                  size: 20, color: Colors.red),
-                              tooltip: 'Xóa danh mục',
-                              onPressed: () => controller.confirmAndDelete(category),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                        return ListTile(
+                          leading: const Icon(Icons.label_outline),
+                          title: Text(category.name),
+                          selected: isSelected,
+                          selectedTileColor: Colors.blue.shade50,
+                          onTap: () => controller.selectCategory(category),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 20),
+                                tooltip: 'Sửa danh mục',
+                                onPressed: () =>
+                                    controller.openEditDialog(category),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline,
+                                    size: 20, color: Colors.red),
+                                tooltip: 'Xóa danh mục',
+                                onPressed: () =>
+                                    controller.confirmAndDelete(category),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
                     // Loading khi đang tạo danh mục mới - đặt TRONG ListView,
                     // ngay sau danh mục cuối cùng, thay vì sau Expanded (chỗ
                     // đó bị đẩy xuống tận đáy Drawer vì Expanded chiếm hết

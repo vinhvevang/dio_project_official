@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/confirm_dialog.dart';
 import 'package:dio_complete/features/cart/domain/entities/cart_item.dart';
 import 'package:dio_complete/features/cart/domain/usecases/cart_usecase.dart';
 import 'package:dio_complete/features/product/data/models/product_model.dart';
+import 'package:dio_complete/features/product/presentation/controllers/product_detail_args.dart';
 import 'package:dio_complete/routes/app_routes.dart';
 
 class CartController extends GetxController {
@@ -77,9 +77,13 @@ class CartController extends GetxController {
   }
 
   void goToDetail(CartItem item) {
+    // Dùng chung đúng 1 kiểu argument với HomeController.goToDetail thay vì 1
+    // Map riêng như trước (Map đó còn nhét cả 'quantity' - dữ liệu không nơi
+    // nào đọc tới, vì màn chi tiết tự tính lại số lượng trong giỏ qua
+    // _loadCartQuantity()).
     Get.toNamed(
       AppRoutes.productDetail,
-      arguments: {'product': item.product, 'quantity': item.quantity},
+      arguments: ProductDetailArgs.fromProduct(item.product),
     );
   }
 

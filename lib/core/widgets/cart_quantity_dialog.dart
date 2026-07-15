@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/core/widgets/app_formatter.dart';
+import 'package:dio_complete/core/widgets/app_image_placeholder.dart';
 import 'package:dio_complete/features/product/data/models/product_model.dart';
 
 Future<int?> showCartQuantityDialog({
@@ -31,9 +33,10 @@ Future<int?> showCartQuantityDialog({
                               width: 64,
                               height: 64,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _placeholder(),
+                              errorBuilder: (_, __, ___) =>
+                                  const AppImagePlaceholder(size: 64),
                             )
-                          : _placeholder(),
+                          : const AppImagePlaceholder(size: 64),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -94,7 +97,7 @@ Future<int?> showCartQuantityDialog({
                   child: ElevatedButton(
                     onPressed: () => Get.back(result: quantity),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF24E1E),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -112,13 +115,6 @@ Future<int?> showCartQuantityDialog({
     barrierDismissible: true,
   );
 }
-
-Widget _placeholder() => Container(
-      width: 64,
-      height: 64,
-      color: Colors.grey.shade200,
-      child: const Icon(Icons.image, color: Colors.grey),
-    );
 
 Widget _qtyButton({required IconData icon, required VoidCallback onTap}) {
   return Material(

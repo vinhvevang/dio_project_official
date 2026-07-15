@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/core/widgets/app_formatter.dart';
 import 'package:dio_complete/features/product/presentation/controllers/product_detail_controller.dart';
 
@@ -11,7 +12,7 @@ class ProductDetailPage extends GetView<ProductDetailController> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chi tiết sản phẩm'),
-        backgroundColor: Color(0xFFF24E1E),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
           IconButton(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/confirm_dialog.dart';
 import 'package:dio_complete/core/widgets/app_message_dialog.dart';
@@ -7,6 +7,7 @@ import 'package:dio_complete/features/cart/domain/usecases/cart_usecase.dart';
 import 'package:dio_complete/features/product/data/models/product_model.dart';
 import 'package:dio_complete/features/product/domain/usecases/product_usecase.dart';
 import 'package:dio_complete/features/product/presentation/controllers/home_controller.dart';
+import 'package:dio_complete/features/product/presentation/controllers/product_detail_args.dart';
 import 'package:dio_complete/features/cart/presentation/controllers/cart_controller.dart';
 import 'package:dio_complete/routes/app_routes.dart';
 
@@ -24,19 +25,13 @@ class ProductDetailController extends GetxController {
   void onInit() {
     super.onInit();
     final arguments = Get.arguments;
-    if (arguments is Product) {
-      product.value = arguments;
-      _productId = arguments.id;
-    } else if (arguments is Map) {
-      final rawProduct = arguments['product'];
-      if (rawProduct is Product) {
-        product.value = rawProduct;
-        _productId = rawProduct.id;
-      } else {
-        _productId = 0;
-      }
+    if (arguments is ProductDetailArgs) {
+      _productId = arguments.productId;
+      product.value = arguments.cachedProduct;
+    } else if (arguments is int) {
+      _productId = arguments;
     } else {
-      _productId = arguments is int ? arguments : 0;
+      _productId = 0;
     }
     _fetchDetail();
     _loadCartQuantity();
@@ -48,9 +43,9 @@ class ProductDetailController extends GetxController {
     try {
       product.value = await _useCase.getProductDetail(_productId);
     } catch (e, st) {
-      print('=== LỖI CHI TIẾT SP ===');
-      print(e);
-      print(st);
+      if (kDebugMode) {
+        debugPrint('=== LỖI CHI TIẾT SP ===\n$e\n$st');
+      }
       await showAppMessageDialog(
         title: 'Lỗi',
         message: e.toString().replaceAll('Exception: ', ''),
@@ -81,17 +76,7 @@ class ProductDetailController extends GetxController {
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().updateProductInList(updated);
       }
-      // Giỏ hàng lưu snapshot Product riêng trong Hive nên cần đồng bộ lại.
-      // Nếu CartController đang sống (đã từng mở màn Giỏ hàng trong phiên
-      // này) thì gọi qua nó để danh sách đang hiển thị được làm mới NGAY.
-      // Nếu chưa (chưa đăng ký), vẫn phải ghi thẳng qua _cartUseCase (đăng ký
-      // global, luôn tồn tại) để dữ liệu lưu trong Hive đúng ngay từ bây giờ
-      // - nếu không, lần đầu mở màn Giỏ hàng sau đó vẫn sẽ đọc ra bản cũ.
-      if (Get.isRegistered<CartController>()) {
-        await Get.find<CartController>().updateProductInList(updated);
-      } else {
-        await _cartUseCase.updateProduct(updated);
-      }
+      await _syncCartAfterProductChanged(edited: updated);
     } else if (updated == true) {
       // Reload lại thông tin sau khi sửa
       await _fetchDetail();
@@ -114,14 +99,8 @@ class ProductDetailController extends GetxController {
 
       // Sản phẩm vừa bị xóa hẳn -> nếu đang có trong giỏ hàng thì phải xóa
       // luôn ở đó, không thì giỏ hàng còn giữ 1 sản phẩm không còn tồn tại
-      // (bấm vào sẽ lỗi, hoặc vẫn "thanh toán" được thứ đã bị xóa). Áp dụng
-      // đúng pattern như goToEdit(): luôn ghi thẳng qua _cartUseCase để chắc
-      // chắn dữ liệu Hive đúng dù CartController có đang sống hay không.
-      if (Get.isRegistered<CartController>()) {
-        await Get.find<CartController>().removeProductFromList(_productId);
-      } else {
-        await _cartUseCase.removeItem(_productId);
-      }
+      // (bấm vào sẽ lỗi, hoặc vẫn "thanh toán" được thứ đã bị xóa).
+      await _syncCartAfterProductChanged(deletedId: _productId);
 
       // Quay về list, báo list tự reload
       Get.back(result: true);
@@ -137,6 +116,44 @@ class ProductDetailController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Đồng bộ lại giỏ hàng sau khi sản phẩm bị SỬA ([edited]) hoặc XÓA HẲN
+  /// ([deletedId]) ở màn chi tiết - giỏ hàng lưu 1 bản snapshot Product riêng
+  /// (Hive) nên không tự làm mới theo. Gộp logic này về 1 chỗ vì trước đây
+  /// goToEdit() và deleteProduct() mỗi hàm tự lặp lại y hệt kiểu rẽ nhánh
+  /// "CartController đang sống thì gọi qua nó, không thì ghi thẳng qua
+  /// usecase".
+  ///
+  /// Luôn truyền ĐÚNG 1 trong 2 tham số. Ưu tiên gọi qua CartController (nếu
+  /// đang sống - tức người dùng đã từng mở giỏ hàng trong phiên này) để danh
+  /// sách ĐANG HIỂN THỊ được làm mới ngay; nếu chưa, ghi thẳng qua
+  /// _cartUseCase (luôn tồn tại, đăng ký global) để dữ liệu Hive đúng ngay từ
+  /// bây giờ - không thì lần đầu mở giỏ hàng sau đó vẫn đọc ra bản cũ.
+  Future<void> _syncCartAfterProductChanged({
+    Product? edited,
+    int? deletedId,
+  }) async {
+    assert(
+      (edited == null) != (deletedId == null),
+      'Chỉ truyền đúng 1 trong 2: edited hoặc deletedId',
+    );
+
+    if (Get.isRegistered<CartController>()) {
+      final cart = Get.find<CartController>();
+      if (edited != null) {
+        await cart.updateProductInList(edited);
+      } else {
+        await cart.removeProductFromList(deletedId!);
+      }
+      return;
+    }
+
+    if (edited != null) {
+      await _cartUseCase.updateProduct(edited);
+    } else {
+      await _cartUseCase.removeItem(deletedId!);
     }
   }
 }

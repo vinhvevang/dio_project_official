@@ -1,21 +1,16 @@
-import 'package:dio/dio.dart';
-import 'package:dio_complete/core/network/api_client.dart';
-import 'package:dio_complete/core/network/dio_error_mapper.dart';
+import 'package:dio_complete/core/network/base_dio_repository.dart';
 import 'package:dio_complete/features/login/domain/repositories/auth_repository.dart';
 
-class AuthRepositoryImpl implements AuthRepository {
+class AuthRepositoryImpl extends BaseDioRepository implements AuthRepository {
   @override
   Future<String> login({
     required String username,
     required String password,
-  }) async {
-    try {
-      final Response response = await ApiClient.dio.post(
+  }) {
+    return run(() async {
+      final response = await dio.post(
         '/login',
-        data: {
-          'username': username,
-          'password': password,
-        },
+        data: {'username': username, 'password': password},
       );
 
       final data = response.data;
@@ -42,7 +37,8 @@ class AuthRepositoryImpl implements AuthRepository {
         }
 
         final nestedData = data['data'];
-        final token = nestedData is Map ? nestedData['access_token']?.toString() : null;
+        final token =
+            nestedData is Map ? nestedData['access_token']?.toString() : null;
         if (token == null || token.isEmpty) {
           throw Exception('Sai tên đăng nhập hoặc mật khẩu');
         }
@@ -51,10 +47,7 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       throw Exception('Sai tên đăng nhập hoặc mật khẩu');
-
-    } on DioException catch (e) {
-      throw Exception(dioErrorMessage(e, 'Đăng nhập thất bại'));
-    }
+    }, fallbackMessage: 'Đăng nhập thất bại');
   }
 
   String _loginErrorMessage(dynamic data) {
