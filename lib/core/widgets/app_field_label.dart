@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Nhãn tên field hiển thị PHÍA TRÊN ô nhập, kèm dấu * đỏ khi field bắt buộc.
-///
-/// Trước đây các form tự viết chữ "(bắt buộc)" lẫn vào ngay trong tên field
-/// (VD: "Tên sản phẩm (bắt buộc)") và dùng labelText của TextFormField (nhãn
-/// nổi BÊN TRONG viền input, dễ bị che/khó đọc khi ô đã có chữ). Widget này
-/// tách nhãn ra thành 1 dòng Text riêng nằm trên ô nhập, và đánh dấu bắt buộc
-/// bằng ký hiệu "*" màu đỏ chuẩn form thay vì viết chữ - dùng chung cho mọi
-/// loại field (TextFormField, DropdownButtonFormField...), không riêng gì
-/// [AppTextFormField].
+
 class AppFieldLabel extends StatelessWidget {
   final String label;
   final bool required;

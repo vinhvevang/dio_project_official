@@ -64,9 +64,7 @@ class ProductRepositoryImpl extends BaseDioRepository
       final response = await dio.get('/products/$id');
       return ProductModel.fromJson(_extractSingleProductMap(response.data)).toEntity();
     } on DioException catch (e) {
-      // 404 hoặc lỗi khác: BE này đôi khi không cho GET chi tiết trực tiếp dù
-      // sản phẩm có tồn tại - dự phòng bằng cách tìm trong danh sách đầy đủ
-      // thay vì báo lỗi ngay.
+      
       if (e.response?.statusCode == 404) return _findProductById(id);
       throw Exception(dioErrorMessage(e, 'Tải chi tiết sản phẩm thất bại'));
     } catch (e) {
@@ -84,15 +82,11 @@ class ProductRepositoryImpl extends BaseDioRepository
       if (node is Map || node is List) {
         return ProductModel.fromJson(_extractSingleProductMap(node))
             .toEntity()
+
             .copyWith(category: payload.category);
       }
 
-      // Backend chỉ trả về id (số) của sản phẩm vừa tạo, không echo lại
-      // object đầy đủ -> GỌI LẠI backend để lấy đúng dữ liệu đã lưu, KHÔNG tự
-      // dựng (fake) 1 Product cục bộ từ input người dùng như trước đây. Dữ
-      // liệu hiển thị luôn phải là dữ liệu backend XÁC NHẬN đã lưu, không
-      // phải suy đoán từ input client (client không biết backend có chỉnh
-      // sửa/validate lại giá trị nào không).
+      
       if (node is num) {
         return getProductDetail(node.toInt());
       }
@@ -113,11 +107,6 @@ class ProductRepositoryImpl extends BaseDioRepository
             .copyWith(category: payload.category);
       }
 
-      // Backend không echo lại object sản phẩm sau khi sửa -> gọi lại chi
-      // tiết để lấy đúng dữ liệu thật (kể cả created_at gốc) từ backend,
-      // thay vì tự dựng (fake) Product từ input client như cách làm cũ - đó
-      // chính là nguyên nhân bug "ngày tạo = ngày cập nhật" trước đây khi rơi
-      // vào nhánh này.
       return getProductDetail(id);
     }, fallbackMessage: 'Cập nhật sản phẩm thất bại');
   }

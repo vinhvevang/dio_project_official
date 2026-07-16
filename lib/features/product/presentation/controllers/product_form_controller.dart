@@ -83,10 +83,7 @@ class ProductFormController extends GetxController {
     descriptionController.text = p.description;
     imageController.text = p.image;
     imageUrl.value = p.image;
-    // Product giờ mang sẵn object category đầy đủ (backend trả object lồng
-    // "category": {...}), không cần tra cứu qua danh sách categoryController
-    // nữa. Vẫn khớp lại với đúng instance trong categories (nếu có) để dropdown
-    // hiển thị đúng, tránh 2 object khác instance nhưng cùng id gây lệch UI.
+
     selectedCategory.value = _matchInCategoryList(p.category);
   }
 
@@ -95,10 +92,7 @@ class ProductFormController extends GetxController {
     for (final c in categoryController.categories) {
       if (c.id == category.id) return c;
     }
-    // Không tìm thấy trong danh sách (danh mục đã bị xóa, hoặc chưa tải xong)
-    // -> PHẢI trả null chứ không trả object của sản phẩm, vì
-    // DropdownButtonFormField sẽ crash nếu value không trùng identity với
-    // bất kỳ item nào trong items (items lấy từ categoryController.categories).
+  
     return null;
   }
 

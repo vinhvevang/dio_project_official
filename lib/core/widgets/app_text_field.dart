@@ -2,14 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio_complete/core/widgets/app_field_label.dart';
 
-/// Ô nhập dùng chung cho toàn app:
-/// - Tên field hiển thị PHÍA TRÊN ô nhập (qua [AppFieldLabel]), kèm dấu "*"
-///   đỏ khi [required] là true - thay vì nhồi chữ "(bắt buộc)" vào label và
-///   dùng labelText nổi bên trong viền như trước.
-/// - Có nút "x" xóa nhanh nội dung (chỉ hiện khi có chữ).
-/// - Hỗ trợ [nextFocus]/[onSubmit] để nhấn Enter/Next tự chuyển sang field kế
-///   tiếp hoặc submit luôn ở field cuối - không cần tự viết
-///   FocusScope.of(context).requestFocus(...) lặp lại ở từng nơi gọi.
 class AppTextFormField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
@@ -32,8 +24,6 @@ class AppTextFormField extends StatelessWidget {
   /// Nếu có: nhấn Enter/Next tự chuyển focus sang field này.
   final FocusNode? nextFocus;
 
-  /// Nếu có (và [nextFocus] null - tức field cuối cùng): nhấn Enter/Done sẽ
-  /// ẩn bàn phím rồi gọi callback này (submit).
   final VoidCallback? onSubmit;
 
   const AppTextFormField({

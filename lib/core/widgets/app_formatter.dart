@@ -2,10 +2,7 @@
 class AppFormatter {
   AppFormatter._();
 
-  /// Định dạng giá theo kiểu Việt Nam: dấu CHẤM ngăn cách hàng nghìn, không
-  /// có phần thập phân (giá tiền trong app luôn là số nguyên đồng).
-  /// VD: currency(119129) -> "119.129 đ", currency(1000000) -> "1.000.000 đ".
-  /// Không dùng package intl để khỏi phải thêm dependency mới vào pubspec.
+  
   static String currency(num value, {bool withSuffix = true}) {
     final rounded = value.round();
     final isNegative = rounded < 0;

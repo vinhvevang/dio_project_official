@@ -21,8 +21,9 @@ class HomeController extends GetxController {
   final _categoryController = Get.find<CategoryController>();
 
   // ─── Danh sách sản phẩm ───────────────────────────────────────
-  final allProducts = <Product>[].obs;    // tất cả đã tải về
-  final shownProducts = <Product>[].obs;  // danh sách hiển thị (sau filter/search)
+  final allProducts = <Product>[].obs; // tất cả đã tải về
+  final shownProducts =
+      <Product>[].obs; // danh sách hiển thị (sau filter/search)
 
   // ─── Trạng thái loading ───────────────────────────────────────
   final isLoading = false.obs;
@@ -30,42 +31,21 @@ class HomeController extends GetxController {
   final hasMore = true.obs;
 
   // ─── Giỏ hàng ─────────────────────────────────────────────────
-  // Không còn giữ 1 "cartCount" riêng ở đây nữa - trước đây nó là 1 con số
-  // chỉ được cập nhật thủ công ở vài chỗ (mở app, thêm hàng, lúc QUAY LẠI từ
-  // trang giỏ hàng), trong khi CartController lại có danh sách `items` của
-  // riêng nó và tự cập nhật mỗi khi xóa/tăng/giảm số lượng NGAY TRÊN trang
-  // giỏ hàng mà không hề báo lại cho HomeController - dẫn tới badge hiện sai
-  // số sau khi xóa/sửa giỏ hàng. Giờ badge (ở home_page.dart) đọc trực tiếp
-  // từ CartController.items - CHỈ 1 nguồn dữ liệu duy nhất, không thể lệch
-  // nhau được nữa dù sửa giỏ hàng ở bất kỳ luồng nào.
+
   final cartIconKey = GlobalKey();
 
-  /// Cache GlobalKey của nút "thêm vào giỏ" theo id sản phẩm - PHẢI tái dùng
-  /// đúng 1 instance qua các lần rebuild item trong danh sách (thay vì tạo
-  /// GlobalKey() mới mỗi lần builder chạy) vì GlobalKey cần ổn định để giữ
-  /// đúng định danh RenderObject (dùng tính điểm bắt đầu hoạt ảnh bay vào
-  /// giỏ) - tạo mới liên tục khiến hoạt ảnh mất điểm gốc/không định danh
-  /// đúng phần tử qua các lần rebuild.
   final Map<int, GlobalKey> _addButtonKeys = {};
 
   GlobalKey addButtonKeyFor(int productId) =>
       _addButtonKeys.putIfAbsent(productId, () => GlobalKey());
 
   // ─── Tìm kiếm ────────────────────────────────────────────────
-  // SearchController (Flutter, kế thừa TextEditingController) để dùng với
-  // SearchAnchor.bar - đọc trực tiếp searchController.text lúc lọc thay vì
-  // lưu thêm 1 biến "searchText" riêng dễ bị lệch với nội dung ô nhập.
+
   final searchController = SearchController();
 
-  /// Debounce cho việc lọc theo từng ký tự gõ - không lọc lại NGAY mỗi ký tự
-  /// (tốn công lọc toàn bộ allProducts liên tục khi người dùng còn đang gõ
-  /// dở), chỉ lọc khi người dùng NGỪNG gõ được [_searchDebounceDuration].
   Timer? _searchDebounce;
   static const _searchDebounceDuration = Duration(milliseconds: 350);
 
-  /// Lịch sử tìm kiếm gần đây (mới nhất ở đầu). Chỉ ghi khi người dùng THẬT
-  /// SỰ chốt một lượt tìm kiếm (Enter hoặc chọn gợi ý), không ghi theo từng
-  /// ký tự gõ dở.
   static const _maxRecentSearches = 8;
   final recentSearches = <String>[].obs;
 
@@ -103,21 +83,13 @@ class HomeController extends GetxController {
     // _applyFilter() trực tiếp qua onSearchChanged, xem bên dưới)
     _targetPriceSubscription = targetPrice.listen((_) => _applyFilter());
     // Chọn danh mục ở Drawer -> lọc lại danh sách ngay
-    _categorySubscription =
-        _categoryController.selectedCategory.listen((_) => _applyFilter());
+    _categorySubscription = _categoryController.selectedCategory.listen(
+      (_) => _applyFilter(),
+    );
   }
 
   @override
   void onClose() {
-    // QUAN TRỌNG: CategoryController sống xuyên suốt app (fenix: true) trong
-    // khi HomeController thì KHÔNG - nếu không hủy 2 subscription này,
-    // callback (_) => _applyFilter() cũ vẫn còn gắn vào
-    // _categoryController.selectedCategory sau khi HomeController này đã bị
-    // dispose. Lần tới danh mục đổi (Home được tạo lại, ví dụ sau khi đăng
-    // xuất/đăng nhập lại), callback CŨ vẫn fire, gọi _applyFilter() vốn đọc
-    // searchController.text - nhưng searchController lúc này ĐÃ dispose ở
-    // dưới → crash. Phải cancel trước khi dispose các controller/text field
-    // mà callback có thể đọc tới.
     _targetPriceSubscription?.cancel();
     _categorySubscription?.cancel();
     _searchDebounce?.cancel();
@@ -151,7 +123,8 @@ class HomeController extends GetxController {
         allProducts.addAll(result.products);
       }
 
-      hasMore.value = result.products.length == _limit &&
+      hasMore.value =
+          result.products.length == _limit &&
           (result.count == null || allProducts.length < result.count!);
       if (hasMore.value) _page++;
 
@@ -194,15 +167,6 @@ class HomeController extends GetxController {
 
     shownProducts.assignAll(list);
 
-    // Lọc theo tên/danh mục trước đây CHỈ chạy trên allProducts (những trang
-    // đã tải qua infinite-scroll) - sản phẩm khớp nhưng nằm ở trang CHƯA tải
-    // sẽ không bao giờ hiện ra dù nó tồn tại. Nếu đang lọc (tên hoặc danh
-    // mục) mà không ra kết quả nào trong số ĐÃ TẢI, nhưng server báo còn dữ
-    // liệu (hasMore) -> tự tải thêm trang tiếp theo; _loadProducts() gọi lại
-    // _applyFilter() ở cuối nên vòng này tự lặp tới khi tìm thấy hoặc tải
-    // hết toàn bộ danh sách. Không áp dụng khi KHÔNG lọc gì (list rỗng khi
-    // đó có nghĩa server thực sự chưa có sản phẩm nào, không phải do chưa
-    // tải đủ).
     final isFiltering = selectedCategory != null || query.isNotEmpty;
     if (isFiltering &&
         list.isEmpty &&
@@ -214,16 +178,12 @@ class HomeController extends GetxController {
   }
 
   // ─── Search callback ──────────────────────────────────────────
-  /// Gọi mỗi ký tự gõ (SearchAnchor.bar onChanged) - DEBOUNCE lại, không lọc
-  /// ngay lập tức để tránh lọc toàn bộ danh sách liên tục khi đang gõ dở.
+
   void onSearchChanged(String _) {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(_searchDebounceDuration, _applyFilter);
   }
 
-  /// Lọc lại NGAY (không debounce) - dùng khi người dùng đã CHỐT xong 1 lượt
-  /// tìm kiếm (nhấn Enter, chọn gợi ý hoặc chọn lịch sử) thay vì đang gõ dở,
-  /// nên không cần chờ thêm.
   void applySearchImmediately() {
     _searchDebounce?.cancel();
     _applyFilter();
@@ -247,7 +207,7 @@ class HomeController extends GetxController {
     recentSearches.remove(term);
   }
 
-  // ─── Áp dụng filter giá (từ bottom sheet) ───────────────────
+  // ─── Áp dụng filter giá (từ bottom sheet) 
   void applyPriceFilter() {
     final val = double.tryParse(priceFilterController.text.trim()) ?? 0;
     targetPrice.value = val;
@@ -261,15 +221,12 @@ class HomeController extends GetxController {
 
   bool get isFilterActive => targetPrice.value > 0;
 
-  // ─── Pull-to-refresh ─────────────────────────────────────────
+  // ─── Pull-to-refresh 
   @override
   Future<void> refresh() => _loadProducts(reset: true);
 
-  // ─── Giỏ hàng ─────────────────────────────────────────────────
-  /// Không nhận BuildContext từ nơi gọi nữa - showCartQuantityDialog dùng
-  /// Get.dialog() (không cần context) và FlyingCartOverlay dùng
-  /// Get.overlayContext nội bộ. HomeController là 1 GetxController, không
-  /// nên cầm theo BuildContext của UI (phá vỡ tách biệt controller/view).
+  // ─── Giỏ hàng 
+
   Future<void> promptAddToCart(Product product, GlobalKey addButtonKey) async {
     final quantity = await showCartQuantityDialog(
       product: product,
@@ -295,23 +252,24 @@ class HomeController extends GetxController {
         to: endRect,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: product.image.isNotEmpty
-              ? Image.network(product.image, width: 56, height: 56, fit: BoxFit.cover)
-              : Container(
-                  width: 56,
-                  height: 56,
-                  color: Colors.grey.shade200,
-                  child: const Icon(Icons.image, color: Colors.grey),
-                ),
+          child:
+              product.image.isNotEmpty
+                  ? Image.network(
+                    product.image,
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                  )
+                  : Container(
+                    width: 56,
+                    height: 56,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.image, color: Colors.grey),
+                  ),
         ),
       );
     }
 
-    // Ghi qua CartController (nếu đang sống) để `items` của nó - nguồn hiển
-    // thị badge số lượng ở AppBar - cập nhật ngay, không cần đợi 1 lượt điều
-    // hướng nào để đồng bộ lại. CartController luôn được đăng ký sẵn từ
-    // HomeBinding nên trên thực tế nhánh else gần như không xảy ra, nhưng
-    // vẫn giữ để phòng khi binding thay đổi trong tương lai.
     if (Get.isRegistered<CartController>()) {
       await Get.find<CartController>().addProduct(product, quantity: quantity);
     } else {
@@ -364,12 +322,7 @@ class HomeController extends GetxController {
 
     if (confirmed) {
       await TokenStorage.clearAll();
-      // KHÔNG xóa giỏ hàng ở đây nữa. App chỉ có 1 tài khoản/thiết bị (không
-      // có khái niệm nhiều user khác nhau đăng nhập cùng máy), nên giỏ hàng
-      // nên tồn tại xuyên suốt các lần đăng nhập - giống cách nó đã tồn tại
-      // xuyên suốt việc tắt/mở lại app (Hive lưu trên đĩa, không liên quan gì
-      // tới phiên đăng nhập). Muốn xóa giỏ hàng, người dùng đã có sẵn nút
-      // "Xóa tất cả" riêng trong màn giỏ hàng (cart_controller.clearCart()).
+
       Get.offAllNamed(AppRoutes.login);
     }
   }
@@ -380,7 +333,9 @@ class HomeController extends GetxController {
   }
 
   void updateProductInList(Product updatedProduct) {
-    final index = allProducts.indexWhere((item) => item.id == updatedProduct.id);
+    final index = allProducts.indexWhere(
+      (item) => item.id == updatedProduct.id,
+    );
     if (index >= 0) {
       allProducts[index] = updatedProduct;
       _applyFilter();

@@ -39,13 +39,7 @@ class _ProductFormAppBar extends GetView<ProductFormController>
   }
 }
 
-/// Obx ở đây CHỈ bọc đúng [Form] (cần đọc hasSubmittedOnce để quyết định
-/// autovalidateMode) - nội dung bên trong tách thành [_ProductFormFields],
-/// 1 widget const RIÊNG, nên khi hasSubmittedOnce đổi giá trị thì Flutter chỉ
-/// cần build lại đúng node Form (đổi 1 tham số của nó), còn cây field bên
-/// dưới được TÁI SỬ DỤNG nguyên vẹn (const) thay vì dựng lại từ đầu.
-/// Trước đây Obx bọc thẳng ra ngoài toàn bộ Column chứa hết mọi field, khiến
-/// cả cây form to phải build lại chỉ vì 1 cờ bool đổi giá trị.
+
 class _ProductFormBody extends GetView<ProductFormController> {
   const _ProductFormBody();
 
@@ -54,9 +48,9 @@ class _ProductFormBody extends GetView<ProductFormController> {
     return Obx(
       () => Form(
         key: controller.formKey,
-        autovalidateMode: controller.hasSubmittedOnce.value
-            ? AutovalidateMode.onUserInteraction
-            : AutovalidateMode.disabled,
+        autovalidateMode: controller.hasSubmittedOnce.value ?
+             AutovalidateMode.onUserInteraction: AutovalidateMode.disabled
+            ,
         child: const _ProductFormFields(),
       ),
     );
@@ -74,8 +68,9 @@ class _ProductFormFields extends GetView<ProductFormController> {
         // ── Preview ảnh (reactive theo imageUrl observable) ──
         const _ImagePreview(),
 
-        // ── Tên sản phẩm ────────────────────────────────────
+        // ── Tên sản phẩm
         AppTextFormField(
+          autovalidateMode: controller.nameController.text.isNotEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
           controller: controller.nameController,
           focusNode: controller.nameFocusNode,
           nextFocus: controller.codeFocusNode,
@@ -87,8 +82,9 @@ class _ProductFormFields extends GetView<ProductFormController> {
         ),
         const SizedBox(height: 12),
 
-        // ── Mã sản phẩm ─────────────────────────────────────
+        // ── Mã sản phẩm
         AppTextFormField(
+          autovalidateMode: controller.codeController.text.isNotEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
           controller: controller.codeController,
           focusNode: controller.codeFocusNode,
           nextFocus: controller.priceFocusNode,
@@ -100,8 +96,9 @@ class _ProductFormFields extends GetView<ProductFormController> {
         ),
         const SizedBox(height: 12),
 
-        // ── Giá ─────────────────────────────────────────────
+        // ── Giá
         AppTextFormField(
+          autovalidateMode: controller.priceController.text.isNotEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
           controller: controller.priceController,
           focusNode: controller.priceFocusNode,
           nextFocus: controller.stockFocusNode,
@@ -114,11 +111,9 @@ class _ProductFormFields extends GetView<ProductFormController> {
         ),
         const SizedBox(height: 12),
 
-        // ── Số lượng ─────────────────────────────────────────
-        // Field cuối trước Danh mục (Dropdown không nằm trong chuỗi focus vì
-        // nó không phải bàn phím) - nên Enter ở đây chuyển luôn tới URL ảnh
-        // (field văn bản tiếp theo sau Dropdown).
+  
         AppTextFormField(
+          autovalidateMode: controller.stockController.text.isNotEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
           controller: controller.stockController,
           focusNode: controller.stockFocusNode,
           nextFocus: controller.imageFocusNode,
@@ -131,11 +126,11 @@ class _ProductFormFields extends GetView<ProductFormController> {
         ),
         const SizedBox(height: 12),
 
-        // ── Danh mục ─────────────────────────────────────────
+        // ── Danh mục
         const _CategoryDropdown(),
         const SizedBox(height: 12),
 
-        // ── URL ảnh ──────────────────────────────────────────
+        // ── URL ảnh 
         AppTextFormField(
           controller: controller.imageController,
           focusNode: controller.imageFocusNode,
@@ -148,7 +143,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
         ),
         const SizedBox(height: 12),
 
-        // ── Mô tả ────────────────────────────────────────────
+        // ── Mô tả
         // Field cuối cùng: nhấn Enter/Done coi như bấm nút submit.
         AppTextFormField(
           controller: controller.descriptionController,
@@ -162,7 +157,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
         const _FieldErrorText(),
         const SizedBox(height: 24),
 
-        // ── Nút submit ───────────────────────────────────────
+        // ── Nút submit 
         const _SubmitButton(),
         const SizedBox(height: 16),
       ],

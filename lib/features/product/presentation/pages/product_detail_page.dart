@@ -46,10 +46,6 @@ class _ProductDetailAppBar extends GetView<ProductDetailController>
   }
 }
 
-/// Toàn bộ nội dung phụ thuộc product.value (đổi sản phẩm là đổi gần như mọi
-/// thứ hiển thị) nên bọc 1 Obx rộng ở đây là hợp lý - không phải trường hợp
-/// "bọc thừa" (khác với product_form_page.dart cũ, nơi Obx bọc cả cây chỉ vì
-/// 1 cờ bool không liên quan tới phần lớn nội dung).
 class _ProductDetailBody extends GetView<ProductDetailController> {
   const _ProductDetailBody();
 
@@ -77,7 +73,10 @@ class _ProductDetailBody extends GetView<ProductDetailController> {
                 children: [
                   _ProductTitleRow(product: p),
                   const SizedBox(height: 8),
-                  Text('Mã SP: ${p.code}', style: const TextStyle(color: Colors.grey)),
+                  Text(
+                    'Mã SP: ${p.code}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                   const SizedBox(height: 4),
                   _CategoryRow(product: p),
                   const SizedBox(height: 16),
@@ -124,10 +123,15 @@ class _ProductBanner extends StatelessWidget {
         child: Image.network(
           product.image,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
-            color: Colors.grey.shade200,
-            child: const Icon(Icons.broken_image, size: 60, color: Colors.grey),
-          ),
+          errorBuilder:
+              (_, __, ___) => Container(
+                color: Colors.grey.shade200,
+                child: const Icon(
+                  Icons.broken_image,
+                  size: 60,
+                  color: Colors.grey,
+                ),
+              ),
         ),
       );
     }
@@ -195,9 +199,6 @@ class _CategoryRow extends StatelessWidget {
   }
 }
 
-/// Đã có Obx riêng sẵn - chỉ phụ thuộc cartQuantity (không phụ thuộc
-/// product.value) nên tách khỏi Obx to bên ngoài, giữ đúng nguyên thiết kế
-/// gốc (đây vốn là 1 ví dụ ĐÚNG cho việc scope Obx hẹp).
 class _CartStatusBanner extends GetView<ProductDetailController> {
   const _CartStatusBanner();
 
@@ -215,7 +216,10 @@ class _CartStatusBanner extends GetView<ProductDetailController> {
           controller.cartQuantity.value > 0
               ? 'Đã thêm vào giỏ: ${controller.cartQuantity.value}'
               : 'Chưa có trong giỏ hàng',
-          style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Colors.blue.shade700,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -267,7 +271,10 @@ class _InfoBox extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -275,7 +282,11 @@ class _InfoBox extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               value,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
           ],
         ),
@@ -295,9 +306,15 @@ class _ProductDescription extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Mô tả', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const Text(
+          'Mô tả',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
         const SizedBox(height: 6),
-        Text(product.description, style: const TextStyle(height: 1.5, color: Colors.black87)),
+        Text(
+          product.description,
+          style: const TextStyle(height: 1.5, color: Colors.black87),
+        ),
         const SizedBox(height: 16),
       ],
     );
@@ -314,9 +331,16 @@ class _MetaRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text('$label: ', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(
+          '$label: ',
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        ),
         Expanded(
-          child: Text(value, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis),
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );

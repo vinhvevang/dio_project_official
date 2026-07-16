@@ -21,13 +21,7 @@ class ProductDetailController extends GetxController {
 
   late int _productId;
 
-  /// HomeController/CartController KHÔNG hoist thành field như _useCase ở
-  /// trên, vì 2 controller đó chỉ sống khi Home/Cart đang có trong stack
-  /// (không đăng ký global như ProductUseCase/CartUseCase) - hoist thẳng
-  /// bằng Get.find sẽ crash ngay lúc khởi tạo ProductDetailController nếu lỡ
-  /// có luồng nào đó mở thẳng màn Chi tiết mà chưa từng qua Home. Getter này
-  /// gom logic kiểm tra "đang sống hay không" về đúng 1 chỗ thay vì lặp lại
-  /// Get.isRegistered/Get.find rải rác trong từng hàm.
+
   HomeController? get _homeControllerIfAlive =>
       Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
 
@@ -105,9 +99,6 @@ class ProductDetailController extends GetxController {
     try {
       await _useCase.deleteProduct(_productId);
 
-      // Sản phẩm vừa bị xóa hẳn -> nếu đang có trong giỏ hàng thì phải xóa
-      // luôn ở đó, không thì giỏ hàng còn giữ 1 sản phẩm không còn tồn tại
-      // (bấm vào sẽ lỗi, hoặc vẫn "thanh toán" được thứ đã bị xóa).
       await _syncCartAfterProductChanged(deletedId: _productId);
 
       // Quay về list, báo list tự reload
@@ -127,18 +118,7 @@ class ProductDetailController extends GetxController {
     }
   }
 
-  /// Đồng bộ lại giỏ hàng sau khi sản phẩm bị SỬA ([edited]) hoặc XÓA HẲN
-  /// ([deletedId]) ở màn chi tiết - giỏ hàng lưu 1 bản snapshot Product riêng
-  /// (Hive) nên không tự làm mới theo. Gộp logic này về 1 chỗ vì trước đây
-  /// goToEdit() và deleteProduct() mỗi hàm tự lặp lại y hệt kiểu rẽ nhánh
-  /// "CartController đang sống thì gọi qua nó, không thì ghi thẳng qua
-  /// usecase".
-  ///
-  /// Luôn truyền ĐÚNG 1 trong 2 tham số. Ưu tiên gọi qua CartController (nếu
-  /// đang sống - tức người dùng đã từng mở giỏ hàng trong phiên này) để danh
-  /// sách ĐANG HIỂN THỊ được làm mới ngay; nếu chưa, ghi thẳng qua
-  /// _cartUseCase (luôn tồn tại, đăng ký global) để dữ liệu Hive đúng ngay từ
-  /// bây giờ - không thì lần đầu mở giỏ hàng sau đó vẫn đọc ra bản cũ.
+
   Future<void> _syncCartAfterProductChanged({
     Product? edited,
     int? deletedId,

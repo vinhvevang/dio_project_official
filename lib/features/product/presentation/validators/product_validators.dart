@@ -1,12 +1,5 @@
 import 'package:dio_complete/features/category/domain/entities/category.dart';
 
-/// Gộp toàn bộ validator của form Sản phẩm về 1 chỗ.
-///
-/// Trước đây `validateCategory` nằm trong ProductFormController trong khi
-/// validator của các field còn lại (tên, mã, giá, số lượng, URL ảnh) lại viết
-/// trực tiếp dạng lambda ngay trong product_form_page.dart - không đồng bộ
-/// (không rõ quy ước validator nên nằm ở đâu), khó tìm khi cần sửa, và khó
-/// test độc lập với UI/controller. Gộp về đây, dùng chung cho cả 2 nơi.
 class ProductValidators {
   ProductValidators._();
 

@@ -4,18 +4,10 @@ import 'package:dio_complete/core/widgets/app_formatter.dart';
 import 'package:dio_complete/core/widgets/app_image_placeholder.dart';
 import 'package:dio_complete/features/product/domain/entities/product.dart';
 
-/// 1 thẻ sản phẩm trong lưới 2 cột ở màn Home.
-///
-/// Nhận toàn bộ dữ liệu/callback qua constructor (không tự Get.find gì bên
-/// trong) - tách khỏi SliverChildBuilderDelegate của HomePage để hàm build()
-/// của trang không phải ôm cả cây widget to (ảnh, badge danh mục, giá, tồn
-/// kho, nút thêm giỏ...) lồng bên trong 1 hàm ẩn danh nữa.
+
 class ProductGridCard extends StatelessWidget {
   final Product product;
 
-  /// GlobalKey ổn định của nút "thêm vào giỏ" (dùng để tính điểm bắt đầu hoạt
-  /// ảnh bay vào giỏ) - PHẢI được gọi tạo từ 1 cache theo id sản phẩm ở nơi
-  /// gọi (HomeController.addButtonKeyFor), không tạo mới ở đây mỗi lần build.
   final GlobalKey addButtonKey;
   final VoidCallback onTap;
   final VoidCallback onAddToCart;
@@ -54,8 +46,7 @@ class ProductGridCard extends StatelessWidget {
   }
 }
 
-/// Ảnh vuông full-width, nút giỏ hàng nổi góc dưới-phải - chuẩn cho card lưới
-/// 2 cột, thay vì Row ngang bị nhồi ép.
+
 class _ProductImage extends StatelessWidget {
   final Product product;
   final GlobalKey addButtonKey;

@@ -61,9 +61,6 @@ class ProductFilterSheet extends GetView<HomeController> {
           ),
           const SizedBox(height: 12),
 
-          // ── Danh mục: chip tick ngay khi chạm (Rx), showCheckmark: false
-          // để chip không đổi kích thước lúc chọn (mặc định ChoiceChip hiện
-          // dấu tick làm phình to, khiến cả hàng bị "nhảy" layout).
           const Text(
             'Danh mục',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
