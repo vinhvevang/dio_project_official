@@ -108,13 +108,6 @@ class _EmptyCart extends StatelessWidget {
 }
 
 /// Thanh tổng tiền cố định dưới đáy màn hình.
-///
-/// Widget này là `const` (được Flutter tái sử dụng nguyên trạng khi
-/// _CartBody rebuild), nên PHẢI tự bọc Obx bên trong để vẫn cập nhật đúng
-/// tổng tiền/số lượng mỗi khi giỏ hàng đổi - nếu đọc totalQuantity/totalPrice
-/// trực tiếp mà không có Obx riêng, nội dung sẽ bị "đóng băng" ở lần build
-/// đầu tiên vì Flutter thấy widget const giống hệt lần trước nên bỏ qua,
-/// không gọi lại build().
 class _CartSummaryBar extends GetView<CartController> {
   const _CartSummaryBar();
 

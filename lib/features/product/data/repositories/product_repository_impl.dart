@@ -10,10 +10,10 @@ import 'package:dio_complete/features/product/domain/repositories/product_reposi
 
 class ProductRepositoryImpl extends BaseDioRepository
     implements ProductRepository {
-  List<Product> _extractProducts(dynamic raw) => asMapList(unwrapData(raw))
-      .map(ProductModel.fromJson)
-      .map((model) => model.toEntity())
-      .toList();
+  List<Product> _extractProducts(dynamic raw) =>
+      asMapList(
+        unwrapData(raw),
+      ).map(ProductModel.fromJson).map((model) => model.toEntity()).toList();
 
   Map<String, dynamic> _extractSingleProductMap(dynamic raw) {
     final node = unwrapData(raw);
@@ -43,7 +43,10 @@ class ProductRepositoryImpl extends BaseDioRepository
       );
       final products = _extractProducts(response.data);
       final rawPaging = response.data is Map ? response.data['paging'] : null;
-      final pagingMap = rawPaging is Map ? asStringKeyedMap(rawPaging) : const <String, dynamic>{};
+      final pagingMap =
+          rawPaging is Map
+              ? asStringKeyedMap(rawPaging)
+              : const <String, dynamic>{};
 
       final rawCount = pagingMap['count'];
       final rawPage = pagingMap['page'];
@@ -62,9 +65,10 @@ class ProductRepositoryImpl extends BaseDioRepository
   Future<Product> getProductDetail(int id) async {
     try {
       final response = await dio.get('/products/$id');
-      return ProductModel.fromJson(_extractSingleProductMap(response.data)).toEntity();
+      return ProductModel.fromJson(
+        _extractSingleProductMap(response.data),
+      ).toEntity();
     } on DioException catch (e) {
-      
       if (e.response?.statusCode == 404) return _findProductById(id);
       throw Exception(dioErrorMessage(e, 'Tải chi tiết sản phẩm thất bại'));
     } catch (e) {
@@ -80,19 +84,18 @@ class ProductRepositoryImpl extends BaseDioRepository
 
       // Trường hợp thường gặp: backend trả về nguyên object sản phẩm vừa tạo.
       if (node is Map || node is List) {
-        return ProductModel.fromJson(_extractSingleProductMap(node))
-            .toEntity()
-
-            .copyWith(category: payload.category);
+        return ProductModel.fromJson(
+          _extractSingleProductMap(node),
+        ).toEntity().copyWith(category: payload.category);
       }
 
-      
       if (node is num) {
         return getProductDetail(node.toInt());
       }
 
       throw Exception('Không lấy được dữ liệu sản phẩm vừa tạo');
     }, fallbackMessage: 'Tạo sản phẩm thất bại');
+ 
   }
 
   @override
@@ -102,9 +105,9 @@ class ProductRepositoryImpl extends BaseDioRepository
       final node = unwrapData(response.data);
 
       if (node is Map || node is List) {
-        return ProductModel.fromJson(_extractSingleProductMap(node))
-            .toEntity()
-            .copyWith(category: payload.category);
+        return ProductModel.fromJson(
+          _extractSingleProductMap(node),
+        ).toEntity().copyWith(category: payload.category);
       }
 
       return getProductDetail(id);

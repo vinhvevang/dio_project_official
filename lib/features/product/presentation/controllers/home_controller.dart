@@ -20,17 +20,17 @@ class HomeController extends GetxController {
   final _cartUseCase = Get.find<CartUseCase>();
   final _categoryController = Get.find<CategoryController>();
 
-  // ─── Danh sách sản phẩm ───────────────────────────────────────
+  // Danh sách sản phẩm 
   final allProducts = <Product>[].obs; // tất cả đã tải về
   final shownProducts =
       <Product>[].obs; // danh sách hiển thị (sau filter/search)
 
-  // ─── Trạng thái loading ───────────────────────────────────────
+  // ─── Trạng thái loading 
   final isLoading = false.obs;
   final isLoadingMore = false.obs;
   final hasMore = true.obs;
 
-  // ─── Giỏ hàng ─────────────────────────────────────────────────
+  //  Giỏ hàng 
 
   final cartIconKey = GlobalKey();
 
@@ -39,7 +39,7 @@ class HomeController extends GetxController {
   GlobalKey addButtonKeyFor(int productId) =>
       _addButtonKeys.putIfAbsent(productId, () => GlobalKey());
 
-  // ─── Tìm kiếm ────────────────────────────────────────────────
+  // Tìm kiếm 
 
   final searchController = SearchController();
 
@@ -49,15 +49,14 @@ class HomeController extends GetxController {
   static const _maxRecentSearches = 8;
   final recentSearches = <String>[].obs;
 
-  // ─── Lọc theo giá (sort by nearest) ──────────────────────────
+  // Lọc theo giá (sort by nearest)
   final priceFilterController = TextEditingController();
   final targetPrice = 0.0.obs; // 0 = không lọc
 
-  // ─── Scroll ───────────────────────────────────────────────────
+  // Scroll 
   final scrollController = ScrollController();
 
-  // Subscription của 2 listener bên dưới - PHẢI cancel ở onClose(), xem lý do
-  // ở onClose().
+  
   StreamSubscription? _targetPriceSubscription;
   StreamSubscription? _categorySubscription;
 
@@ -99,7 +98,7 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-  // ─── Load sản phẩm từ API ─────────────────────────────────────
+  // Load sản phẩm từ API 
   Future<void> _loadProducts({bool reset = false}) async {
     if (isLoading.value || isLoadingMore.value) return;
 
@@ -140,7 +139,7 @@ class HomeController extends GetxController {
     }
   }
 
-  // ─── Lọc + sắp xếp danh sách hiển thị ────────────────────────
+  // Lọc + sắp xếp danh sách hiển thị
   void _applyFilter() {
     var list = allProducts.toList();
 
@@ -177,7 +176,7 @@ class HomeController extends GetxController {
     }
   }
 
-  // ─── Search callback ──────────────────────────────────────────
+  // Search callback
 
   void onSearchChanged(String _) {
     _searchDebounce?.cancel();
@@ -221,11 +220,11 @@ class HomeController extends GetxController {
 
   bool get isFilterActive => targetPrice.value > 0;
 
-  // ─── Pull-to-refresh 
+  //  Pull-to-refresh 
   @override
   Future<void> refresh() => _loadProducts(reset: true);
 
-  // ─── Giỏ hàng 
+  // Giỏ hàng 
 
   Future<void> promptAddToCart(Product product, GlobalKey addButtonKey) async {
     final quantity = await showCartQuantityDialog(
@@ -290,7 +289,7 @@ class HomeController extends GetxController {
     return topLeft & renderObject.size;
   }
 
-  // ─── Điều hướng ───────────────────────────────────────────────
+  // Điều hướng 
   void goToDetail(Product product) async {
     final changed = await Get.toNamed(
       AppRoutes.productDetail,
@@ -312,7 +311,7 @@ class HomeController extends GetxController {
     Get.toNamed(AppRoutes.cart);
   }
 
-  // ─── Đăng xuất ────────────────────────────────────────────────
+  // Đăng xuất 
   Future<void> logout() async {
     final confirmed = await showConfirmDialog(
       title: 'Đăng xuất',

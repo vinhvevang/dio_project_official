@@ -6,7 +6,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/features/login/presentation/controllers/login_controller.dart';
 import 'package:dio_complete/features/login/presentation/validators/auth_validators.dart';
-import 'package:svg_image/svg_image.dart';
 
 class LoginPage extends GetView<LoginController> {
   const LoginPage({super.key});
@@ -24,14 +23,7 @@ class LoginPage extends GetView<LoginController> {
   }
 }
 
-/// Obx CHỈ bọc đúng [Form] (cần đọc hasSubmittedOnce để quyết định
-/// autovalidateMode) - các field bên trong (tách ở [_LoginFormFields], 1
-/// widget const riêng) không tự set autovalidateMode nữa mà THỪA HƯỞNG từ
-/// Form cha (TextFormField khi không set riêng sẽ tự lấy autovalidateMode từ
-/// Form bao ngoài) - giống hệt cách product_form_page.dart đã làm. Vừa hết
-/// lặp lại cùng 1 biểu thức 3 chỗ (Form + từng field tự tính riêng như
-/// trước), vừa tránh phải dựng lại toàn bộ field mỗi khi hasSubmittedOnce đổi
-/// giá trị.
+
 class _LoginFormBody extends GetView<LoginController> {
   const _LoginFormBody();
 
@@ -98,10 +90,7 @@ class _PasswordField extends GetView<LoginController> {
         obscureText: controller.obscurePassword.value,
         textInputAction: TextInputAction.done,
         validator: AuthValidators.password,
-        // Field này tự truyền suffixIcon (icon con mắt) nên AppTextFormField
-        // sẽ KHÔNG tự hiện nút "x" mặc định của nó nữa (widget chỉ hiện 1
-        // trong 2). Ghép chung nút "x" (chỉ hiện khi có chữ, y hệt cách
-        // username đang có) vào đây, đặt bên trái icon con mắt.
+
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

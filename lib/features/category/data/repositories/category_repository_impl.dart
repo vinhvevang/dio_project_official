@@ -18,9 +18,7 @@ class CategoryRepositoryImpl extends BaseDioRepository
     }, fallbackMessage: 'Tải danh mục thất bại');
   }
 
-  /// Trả về id của danh mục vừa tạo - API chỉ trả { "data": <id> }, không trả
-  /// nguyên object, nên phần gọi hàm này sẽ tự dựng Category cục bộ từ id này
-  /// + name vừa nhập để cập nhật UI ngay, không cần gọi lại getCategories().
+
   @override
   Future<int> createCategory(CategoryPayload payload) {
     return run(() async {

@@ -59,9 +59,7 @@ class CategoryController extends GetxController {
       final id = await _categoryUseCase.createCategory(
         CategoryPayload(name: name),
       );
-      // API tạo danh mục chỉ trả về id (data: 5), không trả nguyên object,
-      // nên tự dựng Category cục bộ để cập nhật danh sách ngay, không cần
-      // gọi lại loadCategories().
+    
       final now = DateTime.now().toIso8601String();
       categories.add(
         Category(id: id, status: 1, createdAt: now, updatedAt: now, name: name),

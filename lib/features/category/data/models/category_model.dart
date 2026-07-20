@@ -1,15 +1,6 @@
 import 'package:dio_complete/features/category/domain/entities/category.dart';
 
-/// Model ĐỌC dữ liệu danh mục - đại diện ĐÚNG shape JSON mà backend GET trả
-/// về.
-///
-/// KHÔNG kế thừa (`extends`) entity domain [Category] - kế thừa khiến Model
-/// "giả làm" Entity bằng quan hệ is-a của Dart, không hề có bước CHUYỂN ĐỔI
-/// tường minh nào cả (chỉ đơn thuần dùng được ở chỗ cần Category vì đúng kiểu
-/// con). Ở đây Model và Entity là 2 class HOÀN TOÀN TÁCH BIỆT; [toEntity]
-/// mới là logic chuyển đổi thật sự, và đây cũng là RANH GIỚI DUY NHẤT mà
-/// data layer "chạm" vào domain layer (data biết domain để convert sang,
-/// domain không hề biết gì về data).
+
 class CategoryModel {
   final int id;
   final int status;
@@ -35,10 +26,7 @@ class CategoryModel {
     );
   }
 
-  /// Chuyển Model (data, đúng shape JSON) sang Entity (domain, thuần nghiệp
-  /// vụ, không biết gì về JSON) - luôn gọi hàm này ở repository trước khi
-  /// trả dữ liệu ra khỏi data layer, để usecase/controller/UI không bao giờ
-  /// thấy kiểu CategoryModel, chỉ thấy đúng Category.
+
   Category toEntity() {
     return Category(
       id: id,

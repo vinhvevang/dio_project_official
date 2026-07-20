@@ -39,7 +39,6 @@ class _ProductFormAppBar extends GetView<ProductFormController>
   }
 }
 
-
 class _ProductFormBody extends GetView<ProductFormController> {
   const _ProductFormBody();
 
@@ -48,9 +47,10 @@ class _ProductFormBody extends GetView<ProductFormController> {
     return Obx(
       () => Form(
         key: controller.formKey,
-        autovalidateMode: controller.hasSubmittedOnce.value ?
-             AutovalidateMode.onUserInteraction: AutovalidateMode.disabled
-            ,
+        autovalidateMode:
+            controller.hasSubmittedOnce.value
+                ? AutovalidateMode.onUserInteraction
+                : AutovalidateMode.disabled,
         child: const _ProductFormFields(),
       ),
     );
@@ -70,7 +70,10 @@ class _ProductFormFields extends GetView<ProductFormController> {
 
         // ── Tên sản phẩm
         AppTextFormField(
-          autovalidateMode: controller.nameController.text.isNotEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
+          autovalidateMode:
+              controller.nameController.text.isNotEmpty
+                  ? AutovalidateMode.disabled
+                  : AutovalidateMode.onUserInteraction,
           controller: controller.nameController,
           focusNode: controller.nameFocusNode,
           nextFocus: controller.codeFocusNode,
@@ -84,7 +87,10 @@ class _ProductFormFields extends GetView<ProductFormController> {
 
         // ── Mã sản phẩm
         AppTextFormField(
-          autovalidateMode: controller.codeController.text.isNotEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
+          autovalidateMode:
+              controller.codeController.text.isNotEmpty
+                  ? AutovalidateMode.disabled
+                  : AutovalidateMode.onUserInteraction,
           controller: controller.codeController,
           focusNode: controller.codeFocusNode,
           nextFocus: controller.priceFocusNode,
@@ -98,7 +104,10 @@ class _ProductFormFields extends GetView<ProductFormController> {
 
         // ── Giá
         AppTextFormField(
-          autovalidateMode: controller.priceController.text.isNotEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
+          autovalidateMode:
+              controller.priceController.text.isNotEmpty
+                  ? AutovalidateMode.disabled
+                  : AutovalidateMode.onUserInteraction,
           controller: controller.priceController,
           focusNode: controller.priceFocusNode,
           nextFocus: controller.stockFocusNode,
@@ -111,9 +120,11 @@ class _ProductFormFields extends GetView<ProductFormController> {
         ),
         const SizedBox(height: 12),
 
-  
         AppTextFormField(
-          autovalidateMode: controller.stockController.text.isNotEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
+          autovalidateMode:
+              controller.stockController.text.isNotEmpty
+                  ? AutovalidateMode.disabled
+                  : AutovalidateMode.onUserInteraction,
           controller: controller.stockController,
           focusNode: controller.stockFocusNode,
           nextFocus: controller.imageFocusNode,
@@ -130,7 +141,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
         const _CategoryDropdown(),
         const SizedBox(height: 12),
 
-        // ── URL ảnh 
+        // ── URL ảnh
         AppTextFormField(
           controller: controller.imageController,
           focusNode: controller.imageFocusNode,
@@ -157,7 +168,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
         const _FieldErrorText(),
         const SizedBox(height: 24),
 
-        // ── Nút submit 
+        // ── Nút submit
         const _SubmitButton(),
         const SizedBox(height: 16),
       ],
@@ -182,16 +193,17 @@ class _ImagePreview extends GetView<ProductFormController> {
               url,
               height: 160,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                height: 60,
-                color: Colors.grey.shade200,
-                child: const Center(
-                  child: Text(
-                    'URL ảnh không hợp lệ',
-                    style: TextStyle(color: Colors.grey),
+              errorBuilder:
+                  (_, __, ___) => Container(
+                    height: 60,
+                    color: Colors.grey.shade200,
+                    child: const Center(
+                      child: Text(
+                        'URL ảnh không hợp lệ',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
                   ),
-                ),
-              ),
             ),
           ),
         ),
@@ -247,11 +259,14 @@ class _CategoryDropdown extends GetView<ProductFormController> {
             hint: const Text('Chọn danh mục'),
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.category_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            items: categories
-                .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
-                .toList(),
+            items:
+                categories
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                    .toList(),
             onChanged: (value) {
               controller.selectCategory(value);
               controller.clearFieldError();
@@ -293,18 +308,21 @@ class _SubmitButton extends GetView<ProductFormController> {
         height: 48,
         child: ElevatedButton.icon(
           onPressed: controller.isLoading.value ? null : controller.submit,
-          icon: controller.isLoading.value
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
+          icon:
+              controller.isLoading.value
+                  ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                  : Icon(
+                    controller.isEditMode
+                        ? Icons.save
+                        : Icons.add_circle_outline,
                   ),
-                )
-              : Icon(
-                  controller.isEditMode ? Icons.save : Icons.add_circle_outline,
-                ),
           label: Text(
             controller.isLoading.value
                 ? 'Đang xử lý...'
@@ -313,7 +331,9 @@ class _SubmitButton extends GetView<ProductFormController> {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
       ),

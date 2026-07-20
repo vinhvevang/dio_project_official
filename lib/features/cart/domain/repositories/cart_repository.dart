@@ -9,9 +9,7 @@ abstract class CartRepository {
   Future<void> removeItem(int productId);
   Future<void> clearAll();
 
-  /// Cập nhật lại thông tin sản phẩm (tên/giá/...) cho item ĐÃ CÓ trong giỏ,
-  /// giữ nguyên số lượng - dùng khi sản phẩm được sửa ở nơi khác để giỏ hàng
-  /// không hiển thị dữ liệu cũ.
+ 
   Future<void> updateProduct(Product updated);
 
   int get count;

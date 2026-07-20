@@ -37,13 +37,7 @@ class CategoryDrawer extends StatelessWidget {
             ),
             Expanded(
               child: Obx(() {
-                // "Tất cả sản phẩm" PHẢI luôn hiện ngay, kể cả khi danh mục
-                // còn đang tải - trước đây tile này nằm CÙNG bên trong nhánh
-                // "đang tải -> chỉ hiện spinner" nên bị ẩn theo, khiến người
-                // mới mở app/mở drawer lần đầu không thấy được lựa chọn "Tất
-                // cả" (dù nó đã là lựa chọn mặc định phía sau, selectedCategory
-                // vẫn = null). Giờ tách riêng: spinner CHỈ áp dụng cho phần
-                // danh sách danh mục bên dưới.
+             
                 final isLoadingCategories =
                     controller.isLoading.value && controller.categories.isEmpty;
 
@@ -104,11 +98,7 @@ class CategoryDrawer extends StatelessWidget {
                         );
                       }),
                     ],
-                    // Loading khi đang tạo danh mục mới - đặt TRONG ListView,
-                    // ngay sau danh mục cuối cùng, thay vì sau Expanded (chỗ
-                    // đó bị đẩy xuống tận đáy Drawer vì Expanded chiếm hết
-                    // khoảng trống còn thừa). Đặt ở đây thì nó luôn bám sát
-                    // ngay dưới danh sách dù danh sách dài hay ngắn.
+                 
                     if (controller.isSubmittingCategory.value)
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),

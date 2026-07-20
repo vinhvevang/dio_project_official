@@ -4,8 +4,7 @@ import 'package:dio_complete/core/widgets/app_text_field.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_form_controller.dart';
 import 'package:dio_complete/features/category/presentation/validators/category_validators.dart';
 
-/// Dialog Thêm/Sửa danh mục dùng chung. Nhận [controller] qua constructor
-/// (không qua Get.find) để không lệ thuộc GetX DI cho object tạm thời này.
+
 class CategoryFormDialog extends StatelessWidget {
   final CategoryFormController controller;
 

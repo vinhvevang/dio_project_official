@@ -3,15 +3,7 @@ import 'package:dio_complete/core/widgets/app_formatter.dart';
 import 'package:dio_complete/core/widgets/app_image_placeholder.dart';
 import 'package:dio_complete/features/cart/domain/entities/cart_item.dart';
 
-/// 1 dòng sản phẩm trong danh sách giỏ hàng - tách khỏi ListView.builder của
-/// CartPage để hàm build() của trang không phải ôm cả cây widget to (ảnh,
-/// tên, giá, nút +/-, nút xóa...) lồng bên trong 1 itemBuilder ẩn danh.
-///
-/// CartItem không có id ổn định xuyên suốt kiểu String/int cố định để làm
-/// ValueKey ngoài product.id, nên nếu cần key ổn định cho danh sách này thì
-/// dùng `ValueKey(item.product.id)` ngay tại nơi gọi (ListView.builder) - bản
-/// thân widget này không tự đặt key vì key phải gắn ở ĐÚNG vị trí danh sách
-/// cha, không phải ở widget con.
+
 class CartItemTile extends StatelessWidget {
   final CartItem item;
   final VoidCallback onTap;

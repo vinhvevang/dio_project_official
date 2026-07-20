@@ -5,14 +5,7 @@ import 'package:dio_complete/features/category/domain/entities/category.dart';
 import 'package:dio_complete/features/category/presentation/controllers/category_controller.dart';
 import 'package:dio_complete/features/product/presentation/controllers/home_controller.dart';
 
-/// Mở bottom sheet bộ lọc (danh mục + giá mục tiêu).
-///
-/// [draftCategory] được tạo Ở ĐÂY - đúng 1 lần cho mỗi lần mở sheet - rồi
-/// truyền xuống [ProductFilterSheet] qua constructor thay vì để widget tự
-/// tạo bên trong build(). Nếu tạo trong build(), lựa chọn nháp sẽ bị mất mỗi
-/// khi sheet rebuild vì lý do không liên quan (bàn phím ẩn/hiện, xoay màn
-/// hình...) - build() của 1 StatelessWidget có thể được gọi lại nhiều lần dù
-/// không có setState nào cả.
+
 Future<void> showProductFilterSheet(BuildContext context) {
   final categoryController = Get.find<CategoryController>();
   final draftCategory = Rx<Category?>(categoryController.selectedCategory.value);
@@ -98,8 +91,6 @@ class ProductFilterSheet extends GetView<HomeController> {
             height: 44,
             child: ElevatedButton(
               onPressed: () {
-                // Chỉ tới đây (bấm Áp dụng) danh mục nháp mới được ghi vào
-                // state thật -> HomeController mới lọc lại danh sách.
                 categoryController.selectedCategory.value = draftCategory.value;
                 controller.applyPriceFilter(); // hàm này đã tự Get.back()
               },

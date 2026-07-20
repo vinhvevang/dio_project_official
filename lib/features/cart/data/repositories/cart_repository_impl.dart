@@ -11,10 +11,7 @@ class CartRepositoryImpl implements CartRepository {
 
   Box get _box => Hive.box(_boxName);
 
-  /// Parse danh sách item thô (List<dynamic> lấy từ Hive hoặc jsonDecode) -
-  /// dùng CartItemMapper.fromMap cho từng phần tử và LỌC BỎ (không throw)
-  /// những bản ghi hỏng/sai định dạng, thay vì để 1 bản ghi lỗi làm crash cả
-  /// màn giỏ hàng.
+
   List<CartItem> _parseItems(List<dynamic> raw) {
     return raw
         .whereType<Map>()

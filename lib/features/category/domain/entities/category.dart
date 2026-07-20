@@ -1,5 +1,4 @@
-/// Entity DOMAIN của danh mục - object nghiệp vụ thuần, không biết gì về
-/// JSON/HTTP. Xem product.dart để biết đầy đủ lý do tách entity khỏi model.
+
 class Category {
   final int id;
   final int status;

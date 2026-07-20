@@ -1,6 +1,4 @@
-/// Gộp validator của form Đăng nhập về 1 chỗ - đồng nhất với cách
-/// ProductValidators tách validator ra khỏi cả controller lẫn UI (xem
-/// product_validators.dart để biết đầy đủ lý do).
+
 class AuthValidators {
   AuthValidators._();
 

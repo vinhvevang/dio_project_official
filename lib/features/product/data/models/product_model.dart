@@ -63,7 +63,7 @@ class ProductModel {
   }
 
 
-  static const _placeholderImageUrl = 'https://example.com/image.png';
+  static const _placeholderImageUrl = '';
 
   static String _normalizeImage(dynamic value) {
     final raw = value is String ? value.trim() : '';

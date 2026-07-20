@@ -43,9 +43,6 @@ class ProductFormController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Gán vào biến local trước để Dart tự suy luận kiểu (type promotion) sau
-    // khi kiểm tra `is Product`, tránh phải ép kiểu tường minh bằng `as`
-    // (Get.arguments là 1 getter nên bản thân nó không tự được promote).
     final arguments = Get.arguments;
     if (arguments is Product) {
       _existingProduct = arguments;

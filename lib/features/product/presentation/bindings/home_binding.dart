@@ -6,11 +6,8 @@ import 'package:dio_complete/features/category/presentation/controllers/category
 class HomeBinding extends Bindings {
   @override
   void dependencies() {
-    // CategoryController đặt trước HomeController vì HomeController cần đọc
-    // danh mục đang chọn ngay từ onInit (để nghe selectedCategory.listen).
     Get.lazyPut<CategoryController>(() => CategoryController(), fenix: true);
     Get.lazyPut<HomeController>(() => HomeController());
-    // CartController đặt ở đây để badge giỏ hàng hoạt động đúng
     Get.lazyPut<CartController>(() => CartController(), fenix: true);
   }
 }

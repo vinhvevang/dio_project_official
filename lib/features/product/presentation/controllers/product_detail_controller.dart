@@ -41,7 +41,7 @@ class ProductDetailController extends GetxController {
     _loadCartQuantity();
   }
 
-  // ─── Tải chi tiết sản phẩm từ API ────────────────────────────
+  // Tải chi tiết sản phẩm từ API 
   Future<void> _fetchDetail() async {
     isLoading.value = true;
     try {
@@ -68,7 +68,7 @@ class ProductDetailController extends GetxController {
     cartQuantity.value = item?.quantity ?? 0;
   }
 
-  // ─── Sang màn edit, truyền Product hiện tại vào form ─────────
+  // Sang màn edit, truyền Product hiện tại vào form 
   void goToEdit() async {
     final updated = await Get.toNamed(
       AppRoutes.productForm,
@@ -85,7 +85,7 @@ class ProductDetailController extends GetxController {
     }
   }
 
-  // ─── Xóa sản phẩm (có dialog xác nhận) ───────────────────────
+  //  Xóa sản phẩm (có dialog xác nhận) 
   Future<void> deleteProduct() async {
     final confirmed = await showConfirmDialog(
       title: 'Xóa sản phẩm',

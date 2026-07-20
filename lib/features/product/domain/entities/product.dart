@@ -1,15 +1,5 @@
 import 'package:dio_complete/features/category/domain/entities/category.dart';
 
-/// Entity DOMAIN của sản phẩm - object nghiệp vụ thuần, KHÔNG biết gì về
-/// JSON/HTTP (không có fromJson/toJson). Domain layer chỉ nên phụ thuộc vào
-/// entity, không được phụ thuộc ngược lại data layer.
-///
-/// [ProductModel] (data/models/product_model.dart) là 1 class HOÀN TOÀN
-/// TÁCH BIỆT (không kế thừa class này) đại diện đúng shape JSON backend trả
-/// về; nó có `fromJson` để parse và `toEntity()` để CHUYỂN ĐỔI tường minh
-/// sang [Product] này. Repository luôn gọi `toEntity()` trước khi trả dữ
-/// liệu ra khỏi data layer, nên usecase/controller/UI chỉ bao giờ thấy đúng
-/// [Product], không bao giờ thấy `ProductModel`.
 class Product {
   final int id;
   final int status;
@@ -22,8 +12,6 @@ class Product {
   final String description;
   final String image;
 
-  /// Backend trả danh mục dưới dạng OBJECT LỒNG (không phải category_id
-  /// phẳng) khi đọc. Nullable vì sản phẩm có thể chưa được gán danh mục.
   final Category? category;
 
   /// Tiện dùng để so sánh/lọc mà không cần null-check category? mỗi lần.

@@ -18,12 +18,12 @@ abstract class BaseDioRepository {
     }
   }
 
+
   dynamic unwrapData(dynamic raw) {
     if (raw is Map && raw.containsKey('data')) return raw['data'];
     return raw;
   }
 
-  /// Ép 1 giá trị dynamic (đã biết là Map) về đúng kiểu Map<String, dynamic>.
   Map<String, dynamic> asStringKeyedMap(dynamic value) {
     if (value is Map<String, dynamic>) return value;
     if (value is Map) return Map<String, dynamic>.from(value);
