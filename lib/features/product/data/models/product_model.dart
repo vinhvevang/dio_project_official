@@ -1,6 +1,14 @@
 import 'package:dio_complete/features/category/data/models/category_model.dart';
-import 'package:dio_complete/features/product/domain/entities/product.dart';
 
+/// Model ĐỌC dữ liệu sản phẩm - đại diện ĐÚNG shape JSON mà backend GET trả
+/// về. Chỉ còn field + constructor thuần túy - toàn bộ logic chuyển đổi
+/// (fromJson/toEntity/toJson) đã chuyển sang ProductMapper
+/// (data/mappers/product_mapper.dart) để 1 nơi duy nhất chứa hết logic
+/// "dịch" dữ liệu, Model chỉ còn là khuôn dữ liệu.
+///
+/// KHÔNG kế thừa (`extends`) entity domain Product - xem category_model.dart
+/// để biết đầy đủ lý do. [category] ở đây là CategoryModel (data), không
+/// phải Category (domain) - convert cả 2 cùng lúc trong ProductMapper.toEntity.
 class ProductModel {
   final int id;
   final int status;
@@ -27,53 +35,4 @@ class ProductModel {
     required this.image,
     this.category,
   });
-
-  factory ProductModel.fromJson(Map<String, dynamic> json) {
-    return ProductModel(
-      id: json['id'] ?? 0,
-      status: json['status'] ?? 0,
-      createdAt: json['created_at'] ?? '',
-      updatedAt: json['updated_at'] ?? '',
-      name: json['name'] ?? '',
-      code: json['code'] ?? '',
-      price: _parseDouble(json['price']),
-      stock: json['stock'] ?? 0,
-      description: json['description'] ?? '',
-      image: _normalizeImage(json['image']),
-      category: json['category'] is Map
-          ? CategoryModel.fromJson(Map<String, dynamic>.from(json['category']))
-          : null,
-    );
-  }
-
-  Product toEntity() {
-    return Product(
-      id: id,
-      status: status,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-      name: name,
-      code: code,
-      price: price,
-      stock: stock,
-      description: description,
-      image: image,
-      category: category?.toEntity(),
-    );
-  }
-
-
-  static const _placeholderImageUrl = '';
-
-  static String _normalizeImage(dynamic value) {
-    final raw = value is String ? value.trim() : '';
-    return raw == _placeholderImageUrl ? '' : raw;
-  }
-
-
-  static double _parseDouble(dynamic value) {
-    if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
-  }
 }

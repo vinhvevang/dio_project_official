@@ -1,51 +1,46 @@
-import 'package:dio_complete/core/network/base_dio_repository.dart';
-import 'package:dio_complete/features/category/data/mappers/category_payload_mapper.dart';
-import 'package:dio_complete/features/category/data/models/category_model.dart';
+import 'package:dio_complete/core/network/json_shape_helper.dart';
+import 'package:dio_complete/features/category/data/datasources/category_remote_datasource.dart';
+import 'package:dio_complete/features/category/data/mappers/category_mapper.dart';
 import 'package:dio_complete/features/category/domain/entities/category.dart';
 import 'package:dio_complete/features/category/domain/entities/category_payload.dart';
 import 'package:dio_complete/features/category/domain/repositories/category_repository.dart';
 
-class CategoryRepositoryImpl extends BaseDioRepository
-    implements CategoryRepository {
+/// Repository giờ KHÔNG tự gọi dio nữa - mọi lời gọi mạng đi qua
+/// [CategoryRemoteDataSource]. Xem product_repository_impl.dart để biết đầy
+/// đủ lý do tách lớp này.
+class CategoryRepositoryImpl with JsonShapeHelper implements CategoryRepository {
+  final CategoryRemoteDataSource _dataSource;
+
+  CategoryRepositoryImpl(this._dataSource);
+
   @override
-  Future<List<Category>> getCategories() {
-    return run(() async {
-      final response = await dio.get('/categories');
-      return asMapList(unwrapData(response.data))
-          .map(CategoryModel.fromJson)
-          .map((model) => model.toEntity())
-          .toList();
-    }, fallbackMessage: 'Tải danh mục thất bại');
+  Future<List<Category>> getCategories() async {
+    final raw = await _dataSource.getCategories();
+    return asMapList(unwrapData(raw))
+        .map(CategoryMapper.fromJson)
+        .map(CategoryMapper.toEntity)
+        .toList();
   }
 
-
   @override
-  Future<int> createCategory(CategoryPayload payload) {
-    return run(() async {
-      final response = await dio.post('/categories', data: payload.toJson());
-      final node = unwrapData(response.data);
+  Future<int> createCategory(CategoryPayload payload) async {
+    final raw = await _dataSource.createCategory(CategoryMapper.toJson(payload));
+    final node = unwrapData(raw);
 
-      if (node is num) return node.toInt();
-      if (node is Map) {
-        final id = node['id'];
-        if (id is num) return id.toInt();
-      }
+    if (node is num) return node.toInt();
+    if (node is Map) {
+      final id = node['id'];
+      if (id is num) return id.toInt();
+    }
 
-      throw Exception('Không lấy được id danh mục vừa tạo');
-    }, fallbackMessage: 'Tạo danh mục thất bại');
+    throw Exception('Không lấy được id danh mục vừa tạo');
   }
 
   @override
   Future<void> updateCategory(int id, CategoryPayload payload) {
-    return run<void>(() async {
-      await dio.put('/categories/$id', data: payload.toJson());
-    }, fallbackMessage: 'Cập nhật danh mục thất bại');
+    return _dataSource.updateCategory(id, CategoryMapper.toJson(payload));
   }
 
   @override
-  Future<void> deleteCategory(int id) {
-    return run<void>(() async {
-      await dio.delete('/categories/$id');
-    }, fallbackMessage: 'Xóa danh mục thất bại');
-  }
+  Future<void> deleteCategory(int id) => _dataSource.deleteCategory(id);
 }

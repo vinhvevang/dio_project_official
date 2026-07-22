@@ -96,6 +96,7 @@ class AppTextFormField extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
+          
           maxLines: obscureText ? 1 : maxLines,
           textInputAction: effectiveTextInputAction,
           onChanged: onChanged,

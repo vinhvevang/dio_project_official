@@ -1,16 +1,18 @@
 import 'dart:convert';
-import 'package:hive/hive.dart';
+import 'package:dio_complete/features/cart/data/datasources/cart_local_datasource.dart';
 import 'package:dio_complete/features/cart/data/mappers/cart_item_mapper.dart';
 import 'package:dio_complete/features/cart/domain/entities/cart_item.dart';
 import 'package:dio_complete/features/cart/domain/repositories/cart_repository.dart';
 import 'package:dio_complete/features/product/domain/entities/product.dart';
 
+/// Repository giờ KHÔNG tự đụng vào Hive Box nữa - mọi lời đọc/ghi đi qua
+/// [CartLocalDataSource]. Repository chỉ còn lo diễn giải dữ liệu thô (qua
+/// CartItemMapper) và các thao tác nghiệp vụ (tăng/giảm số lượng, gộp khi
+/// thêm trùng sản phẩm...).
 class CartRepositoryImpl implements CartRepository {
-  static const _boxName = 'cartBox';
-  static const _key = 'items';
+  final CartLocalDataSource _dataSource;
 
-  Box get _box => Hive.box(_boxName);
-
+  CartRepositoryImpl(this._dataSource);
 
   List<CartItem> _parseItems(List<dynamic> raw) {
     return raw
@@ -22,10 +24,11 @@ class CartRepositoryImpl implements CartRepository {
 
   @override
   List<CartItem> loadItems() {
-    final raw = _box.get(_key);
+    final raw = _dataSource.readItems();
     if (raw == null) return [];
     if (raw is List) return _parseItems(raw);
 
+    // Bản ghi cũ có thể lưu dạng String JSON thay vì List trực tiếp.
     if (raw is String && raw.isNotEmpty) {
       final decoded = jsonDecode(raw);
       if (decoded is List) return _parseItems(decoded);
@@ -90,13 +93,13 @@ class CartRepositoryImpl implements CartRepository {
 
   @override
   Future<void> clearAll() async {
-    await _box.delete(_key);
+    await _dataSource.clear();
   }
 
   @override
   int get count => loadItems().length;
 
-  Future<void> _save(List<CartItem> items) async {
-    await _box.put(_key, items.map(CartItemMapper.toMap).toList());
+  Future<void> _save(List<CartItem> items) {
+    return _dataSource.writeItems(items.map(CartItemMapper.toMap).toList());
   }
 }

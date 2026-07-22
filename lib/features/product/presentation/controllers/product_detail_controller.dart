@@ -72,7 +72,7 @@ class ProductDetailController extends GetxController {
   void goToEdit() async {
     final updated = await Get.toNamed(
       AppRoutes.productForm,
-      arguments: product.value, // form nhận Product này để điền sẵn
+      arguments: product.value, // form nhận Product này để điền sẵn 
     );
 
     if (updated is Product) {

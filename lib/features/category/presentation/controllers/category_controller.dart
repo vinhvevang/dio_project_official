@@ -48,7 +48,7 @@ class CategoryController extends GetxController {
   Future<void> openAddDialog() async {
     final formController = CategoryFormController();
 
-    final name = await Get.dialog<String>(
+    final name = await Get.dialog(// old code have <String>
       CategoryFormDialog(controller: formController),
     );
 
@@ -83,7 +83,7 @@ class CategoryController extends GetxController {
   Future<void> openEditDialog(Category category) async {
     final formController = CategoryFormController(initial: category);
 
-    final name = await Get.dialog<String>(
+    final name = await Get.dialog(
       CategoryFormDialog(controller: formController),
     );
 

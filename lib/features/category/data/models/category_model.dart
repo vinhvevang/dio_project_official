@@ -1,6 +1,12 @@
-import 'package:dio_complete/features/category/domain/entities/category.dart';
-
-
+/// Model ĐỌC dữ liệu danh mục - đại diện ĐÚNG shape JSON mà backend GET trả
+/// về. Chỉ còn field + constructor thuần túy - toàn bộ logic chuyển đổi
+/// (fromJson/toEntity) đã chuyển sang CategoryMapper
+/// (data/mappers/category_mapper.dart) để 1 nơi duy nhất chứa hết logic
+/// "dịch" dữ liệu, Model chỉ còn là khuôn dữ liệu.
+///
+/// KHÔNG kế thừa (`extends`) entity domain [Category] - Model/Entity là 2
+/// class tách biệt, chuyển đổi qua CategoryMapper.toEntity() tường minh thay
+/// vì dựa vào quan hệ is-a của kế thừa.
 class CategoryModel {
   final int id;
   final int status;
@@ -15,25 +21,4 @@ class CategoryModel {
     required this.updatedAt,
     required this.name,
   });
-
-  factory CategoryModel.fromJson(Map<String, dynamic> json) {
-    return CategoryModel(
-      id: json['id'] ?? 0,
-      status: json['status'] ?? 0,
-      createdAt: json['created_at'] ?? '',
-      updatedAt: json['updated_at'] ?? '',
-      name: json['name'] ?? '',
-    );
-  }
-
-
-  Category toEntity() {
-    return Category(
-      id: id,
-      status: status,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-      name: name,
-    );
-  }
 }

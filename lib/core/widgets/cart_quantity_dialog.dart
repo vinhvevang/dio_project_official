@@ -11,7 +11,7 @@ Future<int?> showCartQuantityDialog({
 }) async {
   int quantity = initialQuantity < 1 ? 1 : initialQuantity;
 
-  return Get.dialog<int>(
+  return Get.dialog(//old code have <int>
     Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: StatefulBuilder(

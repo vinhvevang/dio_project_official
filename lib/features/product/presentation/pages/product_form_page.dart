@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dio_complete/core/widgets/app_colors.dart';
 import 'package:dio_complete/core/widgets/app_field_label.dart';
@@ -115,6 +116,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
           required: true,
           hintText: 'VD: 120000',
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onChanged: (_) => controller.clearFieldError(),
           validator: ProductValidators.price,
         ),
@@ -132,6 +134,7 @@ class _ProductFormFields extends GetView<ProductFormController> {
           required: true,
           hintText: 'VD: 10',
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onChanged: (_) => controller.clearFieldError(),
           validator: ProductValidators.stock,
         ),

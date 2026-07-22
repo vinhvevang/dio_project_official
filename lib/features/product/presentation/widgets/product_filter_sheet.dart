@@ -25,87 +25,89 @@ class ProductFilterSheet extends GetView<HomeController> {
   Widget build(BuildContext context) {
     final categoryController = Get.find<CategoryController>();
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'Bộ lọc',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  controller.clearPriceFilter();
-                  categoryController.selectedCategory.value = null;
-                  Get.back();
-                },
-                child: const Text('Xóa lọc', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          const Text(
-            'Danh mục',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          _CategoryChips(
-            categoryController: categoryController,
-            draftCategory: draftCategory,
-          ),
-
-          const SizedBox(height: 16),
-          const Text(
-            'Giá mục tiêu',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Nhập giá mục tiêu. Danh sách sẽ sắp xếp sản phẩm có giá gần nhất lên đầu.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: controller.priceFilterController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Giá mục tiêu (đ)',
-              hintText: 'VD: 500000',
-              prefixIcon: const Icon(Icons.attach_money),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: ElevatedButton(
-              onPressed: () {
-                categoryController.selectedCategory.value = draftCategory.value;
-                controller.applyPriceFilter(); // hàm này đã tự Get.back()
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+    return SingleChildScrollView(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Bộ lọc',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-              ),
-              child: const Text('Áp dụng'),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    controller.clearPriceFilter();
+                    categoryController.selectedCategory.value = null;
+                    Get.back();
+                  },
+                  child: const Text('Xóa lọc', style: TextStyle(color: Colors.red)),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-        ],
+            const SizedBox(height: 12),
+      
+            const Text(
+              'Danh mục',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            _CategoryChips(
+              categoryController: categoryController,
+              draftCategory: draftCategory,
+            ),
+      
+            const SizedBox(height: 16),
+            const Text(
+              'Giá mục tiêu',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Nhập giá mục tiêu. Danh sách sẽ sắp xếp sản phẩm có giá gần nhất lên đầu.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller.priceFilterController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Giá mục tiêu (đ)',
+                hintText: 'VD: 500000',
+                prefixIcon: const Icon(Icons.attach_money),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: () {
+                  categoryController.selectedCategory.value = draftCategory.value;
+                  controller.applyPriceFilter(); // hàm này đã tự Get.back()
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Áp dụng'),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

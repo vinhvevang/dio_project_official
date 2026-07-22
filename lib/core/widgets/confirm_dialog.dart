@@ -8,7 +8,7 @@ Future<bool> showConfirmDialog({
   String cancelLabel = 'Hủy',
   bool isDestructive = true,
 }) async {
-  final confirmed = await Get.dialog<bool>(
+  final confirmed = await Get.dialog(//old code have <bool>
     AlertDialog(
       title: Text(title),
       content: Text(message),
